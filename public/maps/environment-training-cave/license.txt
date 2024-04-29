@@ -1,0 +1,11 @@
+Model Information:
+* title:	Environment-training-cave
+* source:	https://sketchfab.com/3d-models/environment-training-cave-fe27f61d5ea646d2a4728e5b9e7c3f20
+* author:	Nomnivore (https://sketchfab.com/nomnivore)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Environment-training-cave" (https://sketchfab.com/3d-models/environment-training-cave-fe27f61d5ea646d2a4728e5b9e7c3f20) by Nomnivore (https://sketchfab.com/nomnivore) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

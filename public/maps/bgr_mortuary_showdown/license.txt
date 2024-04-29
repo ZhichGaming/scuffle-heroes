@@ -1,0 +1,11 @@
+Model Information:
+* title:	Bgr_mortuary_showdown
+* source:	https://sketchfab.com/3d-models/bgr-mortuary-showdown-1c741018fe384735a19ef36a3d40cedd
+* author:	mourad ✨ (https://sketchfab.com/mouradouchen11)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Bgr_mortuary_showdown" (https://sketchfab.com/3d-models/bgr-mortuary-showdown-1c741018fe384735a19ef36a3d40cedd) by mourad ✨ (https://sketchfab.com/mouradouchen11) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

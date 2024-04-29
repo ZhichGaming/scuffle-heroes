@@ -1,7 +1,10 @@
-import Image from "next/image";
+import React from "react";
+import App from "./App";
 
 export default function Home() {
   return (
-    <div></div>
+    // <React.Suspense fallback={<div>Loading...</div>}>
+      <App/>
+    // </React.Suspense>
   );
 }

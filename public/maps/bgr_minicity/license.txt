@@ -1,0 +1,11 @@
+Model Information:
+* title:	bgr_minicity
+* source:	https://sketchfab.com/3d-models/bgr-minicity-2822c4729bdb44f095e7cc71c725eb11
+* author:	mourad ✨ (https://sketchfab.com/mouradouchen11)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "bgr_minicity" (https://sketchfab.com/3d-models/bgr-minicity-2822c4729bdb44f095e7cc71c725eb11) by mourad ✨ (https://sketchfab.com/mouradouchen11) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
