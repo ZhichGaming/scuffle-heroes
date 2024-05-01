@@ -12,6 +12,7 @@ export default function App() {
 
     useEffect(() => {
         game = new Game(handleGameEnd);
+        game.start()
     }, [])
     
     return (
