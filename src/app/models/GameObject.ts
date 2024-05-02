@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Brawler } from './Brawler';
 
 export default class GameObject {
     position: THREE.Vector3;
@@ -6,6 +7,9 @@ export default class GameObject {
     acceleration: THREE.Vector3;
     rotation: THREE.Quaternion;
     health: number;
+    isEntity: boolean;
+
+    model?: THREE.Object3D;
 
     constructor() {
         this.position = new THREE.Vector3();
@@ -13,5 +17,6 @@ export default class GameObject {
         this.acceleration = new THREE.Vector3();
         this.rotation = new THREE.Quaternion();
         this.health = -1;
+        this.isEntity = false;
     }
 }

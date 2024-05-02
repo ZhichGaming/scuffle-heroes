@@ -1,12 +1,19 @@
 import * as THREE from 'three';
 import { nita } from "./models/brawlers/Nita";
-import { Pipe } from 'stream';
 import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, GlitchPass, ShaderPass, RoomEnvironment } from 'three/examples/jsm/Addons.js';
 import { fragmentShader } from './shaders/FragmentShader';
 import { vertexShader } from './shaders/VertexShader';
+import { GameInfo } from './models/GameInfo';
+import { duel } from './models/maps/Duel';
+import { GameMap } from './models/GameMap';
+import { Brawler } from './models/Brawler';
 
-export const brawlers = [
+export const brawlers: Brawler[] = [
     nita,
+]
+
+export const maps: GameMap[] = [
+    duel,
 ]
 
 const BLOOM_SCENE = 1;
@@ -32,6 +39,8 @@ export default class Game {
 
     stopped = false;
     private handleEnd: () => void;
+
+    currentGame: GameInfo;
 
     constructor(handleEnd: () => void) {
         this.scene = new THREE.Scene();
@@ -94,6 +103,34 @@ export default class Game {
         const pmremGenerator = new THREE.PMREMGenerator( this.renderer );
 
         this.scene.environment = pmremGenerator.fromScene( environment ).texture;
+
+        // Resize canvas on window resize
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
+        });
+    }
+
+    public start() {
+        this.animate();
+    }
+
+    public stop() {
+        this.renderer.dispose();
+        this.stopped = true;
+    }
+
+    public loadGame(game: GameInfo) {
+        this.currentGame = game;
+
+        this.loader.load(game.map.backgroundObjectPath, (gltf) => {
+            this.scene.add(gltf.scene);
+        });
     }
     
     private nonBloomed(obj: any) {
@@ -110,17 +147,10 @@ export default class Game {
         }
     }
 
-    public start() {
-        this.animate();
-    }
-
-    public stop() {
-        this.renderer.dispose();
-        this.stopped = true;
-    }
-
     private animate() {
-        const delta = this.clock.getDelta();
+        const delta = this.clock.getDelta()
+        
+        
 
         this.controls.update();
 
