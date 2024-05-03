@@ -9,4 +9,9 @@ export type GameMap = {
     
     backgroundObjectPath: string;
     backgroundObject?: THREE.Object3D;
+
+    firstCorner: THREE.Vector3;
+    secondCorner: THREE.Vector3;
+    xBlockAmount: number;
+    zBlockAmount: number;
 }

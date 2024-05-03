@@ -104,6 +104,11 @@ export default class Game {
 
         this.scene.environment = pmremGenerator.fromScene( environment ).texture;
 
+        // const gridHelper = new THREE.GridHelper(100, 100);
+        // this.scene.add( gridHelper );
+
+        this.camera.position.z = 5;
+
         // Resize canvas on window resize
         window.addEventListener('resize', () => {
             const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -129,8 +134,24 @@ export default class Game {
         this.currentGame = game;
 
         this.loader.load(game.map.backgroundObjectPath, (gltf) => {
+            gltf.scene.position.set(0, 0, 0);
             this.scene.add(gltf.scene);
         });
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+        this.scene.add(ambientLight);
+
+        // const pointLight = new THREE.PointLight(0xffffff, 100, 100);
+        // pointLight.position.set(game.map.firstCorner.x, game.map.firstCorner.y + 10, game.map.firstCorner.z);
+
+        // const sphere1 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), new THREE.MeshStandardMaterial({ color: 0xffffff, emissiveIntensity: 1 }));
+        // sphere1.position.set(game.map.firstCorner.x, game.map.firstCorner.y, game.map.firstCorner.z);
+        // this.scene.add(sphere1);
+        // const sphere2 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), new THREE.MeshStandardMaterial({ color: 0xffffff, emissiveIntensity: 1 }));
+        // sphere2.position.set(game.map.secondCorner.x, game.map.secondCorner.y, game.map.secondCorner.z);
+        // this.scene.add(sphere2);
+        // this.camera.lookAt(sphere2.position);
+        // this.controls.target = sphere2.position;
     }
     
     private nonBloomed(obj: any) {
