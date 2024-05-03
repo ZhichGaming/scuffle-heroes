@@ -4,16 +4,20 @@ import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, Unre
 import { fragmentShader } from './shaders/FragmentShader';
 import { vertexShader } from './shaders/VertexShader';
 import { GameInfo } from './models/GameInfo';
-import { duel } from './models/maps/Duel';
+import { minicity } from './models/maps/minicity';
 import { GameMap } from './models/GameMap';
 import { Brawler } from './models/Brawler';
+import { starrpark } from './models/maps/starrpark';
+import getMiddlePoint from './utils/getMiddlePoint';
+import { get } from 'http';
 
 export const brawlers: Brawler[] = [
     nita,
 ]
 
 export const maps: GameMap[] = [
-    duel,
+    minicity,
+    starrpark
 ]
 
 const BLOOM_SCENE = 1;
@@ -36,6 +40,8 @@ export default class Game {
     private bloomLayer: THREE.Layers;
     private materials: any;
     private bloomParams: any;
+
+    private directionalLight: THREE.DirectionalLight;
 
     stopped = false;
     private handleEnd: () => void;
@@ -104,6 +110,11 @@ export default class Game {
 
         this.scene.environment = pmremGenerator.fromScene( environment ).texture;
 
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+        this.scene.add(ambientLight);
+
+        this.loadSkybox();
+
         // const gridHelper = new THREE.GridHelper(100, 100);
         // this.scene.add( gridHelper );
 
@@ -138,11 +149,16 @@ export default class Game {
             this.scene.add(gltf.scene);
         });
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-        this.scene.add(ambientLight);
+        this.camera.position.set(getMiddlePoint(game.map).x, 1, 2*getMiddlePoint(game.map).z);
+        this.camera.lookAt(getMiddlePoint(game.map).x, 10, 0);
+        this.controls.target = new THREE.Vector3(getMiddlePoint(game.map).x, 10, 0);
 
-        // const pointLight = new THREE.PointLight(0xffffff, 100, 100);
-        // pointLight.position.set(game.map.firstCorner.x, game.map.firstCorner.y + 10, game.map.firstCorner.z);
+        this.directionalLight = new THREE.DirectionalLight(0xffffff, 10);
+        this.directionalLight.position.set(getMiddlePoint(game.map).x, 5, 0);
+        this.directionalLight.target.position.set(getMiddlePoint(game.map).x, 0, getMiddlePoint(game.map).z);
+        this.scene.add(this.directionalLight);
+        // const helper = new THREE.DirectionalLightHelper(directionalLight);
+        // this.scene.add(helper);
 
         // const sphere1 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), new THREE.MeshStandardMaterial({ color: 0xffffff, emissiveIntensity: 1 }));
         // sphere1.position.set(game.map.firstCorner.x, game.map.firstCorner.y, game.map.firstCorner.z);
@@ -152,6 +168,23 @@ export default class Game {
         // this.scene.add(sphere2);
         // this.camera.lookAt(sphere2.position);
         // this.controls.target = sphere2.position;
+    }
+
+    private loadSkybox() {
+        const sphereGeometry = new THREE.SphereGeometry( 500, 60, 40 );
+        // invert the geometry on the x-axis so that all of the faces point inward
+        sphereGeometry.scale( -1, 1, 1 );
+        sphereGeometry.rotateY(-Math.PI / 2);
+
+        // Skybox
+        const sphereTexture = new THREE.TextureLoader().load('/Ggenebrush_HDRI1.png');
+        sphereTexture.colorSpace = THREE.SRGBColorSpace;
+        // sphereTexture.
+        const sphereMaterial = new THREE.MeshStandardMaterial( { map: sphereTexture, envMapIntensity: 5 } );
+
+        const mesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
+
+        this.scene.add( mesh );
     }
     
     private nonBloomed(obj: any) {
@@ -185,4 +218,3 @@ export default class Game {
         if (!this.stopped) requestAnimationFrame(this.animate.bind(this));
     }
 }
-

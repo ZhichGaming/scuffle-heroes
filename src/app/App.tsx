@@ -16,7 +16,7 @@ export default function App() {
     useEffect(() => {
         const gameInfo: GameInfo = {
             gameMode: GameMode.SHOWDOWN,
-            map: maps[0],
+            map: maps[1],
             brawlers: [],
             duration: 120,
             respawnDuration: 5,
