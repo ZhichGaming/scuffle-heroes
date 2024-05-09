@@ -1,7 +1,7 @@
-import { Brawler, BrawlerAttackShape, BrawlerAttackType, BrawlerSpeed } from "../Brawler";
+import { BrawlerProperties, BrawlerAttackShape, BrawlerAttackType, BrawlerSpeed } from "../Brawler";
 
 // Wiki: https://brawlstars.fandom.com/wiki/Nita
-export const nita: Brawler = {
+export const nita: BrawlerProperties = {
     name: "Nita",
     maxHealth: 4000,
     speed: BrawlerSpeed.NORMAL,

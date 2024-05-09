@@ -6,18 +6,36 @@ import { vertexShader } from './shaders/VertexShader';
 import { GameInfo } from './models/GameInfo';
 import { minicity } from './models/maps/minicity';
 import { GameMap } from './models/GameMap';
-import { Brawler } from './models/Brawler';
+import { BrawlerProperties } from './models/Brawler';
 import { starrpark } from './models/maps/starrpark';
 import getMiddlePoint from './utils/getMiddlePoint';
 import { get } from 'http';
+import GameObstacle, { GameObstacleProperties } from './models/GameObstacle';
+import { bush } from './models/obstacles/bush';
+import { woodenBox } from './models/obstacles/woodenBox';
+import { woodenBarrel } from './models/obstacles/woodenBarrel';
+import { powerCubeBox } from './models/obstacles/powerCubeBox';
+import { skulls } from './models/obstacles/skulls';
+import { unbreakableWall } from './models/obstacles/unbreakableWall';
+import { gemSpawner } from './models/obstacles/gemSpawner';
 
-export const brawlers: Brawler[] = [
+export const brawlers: BrawlerProperties[] = [
     nita,
 ]
 
 export const maps: GameMap[] = [
     minicity,
     starrpark
+]
+
+export const obstacles: GameObstacleProperties[] = [
+    woodenBox,
+    woodenBarrel,
+    bush,
+    powerCubeBox,
+    skulls,
+    unbreakableWall,
+    gemSpawner
 ]
 
 const BLOOM_SCENE = 1;
@@ -41,12 +59,12 @@ export default class Game {
     private materials: any;
     private bloomParams: any;
 
-    private directionalLight: THREE.DirectionalLight;
+    private directionalLight?: THREE.DirectionalLight;
 
     stopped = false;
     private handleEnd: () => void;
 
-    currentGame: GameInfo;
+    currentGame?: GameInfo;
 
     constructor(handleEnd: () => void) {
         this.scene = new THREE.Scene();
@@ -118,6 +136,30 @@ export default class Game {
         // const gridHelper = new THREE.GridHelper(100, 100);
         // this.scene.add( gridHelper );
 
+        
+
+        this.loader.load('/items/source/brawl/Project Name.gltf', (gltf) => {
+            gltf.scene.position.set(0, 0, 0);
+            gltf.scene.scale.set(100, 100, 100);
+            gltf.scene.translateZ(10)
+
+            const itemIndexes = [11]
+
+            for (let i = gltf.scene.children.length - 1; i >= 0; i--) {
+                // const index = gltf.scene.children.length - i - 1;
+                const child = gltf.scene.children[i];
+
+                if (!itemIndexes.includes(i))
+                    child.removeFromParent();
+            }
+
+            // const box = new THREE.Box3().setFromObject(gltf.scene);
+            // const helper = new THREE.Box3Helper(box, 0xffff00);
+            // this.scene.add(helper);
+
+            this.scene.add(gltf.scene);
+        });
+
         this.camera.position.z = 5;
 
         // Resize canvas on window resize
@@ -149,7 +191,7 @@ export default class Game {
             this.scene.add(gltf.scene);
         });
 
-        this.camera.position.set(getMiddlePoint(game.map).x, 1, 2*getMiddlePoint(game.map).z);
+        this.camera.position.set(getMiddlePoint(game.map).x, 1, 2 * getMiddlePoint(game.map).z);
         this.camera.lookAt(getMiddlePoint(game.map).x, 10, 0);
         this.controls.target = new THREE.Vector3(getMiddlePoint(game.map).x, 10, 0);
 

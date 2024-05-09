@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Brawler } from './Brawler';
+import { BrawlerProperties } from './Brawler';
 
 export default class GameObject {
     position: THREE.Vector3;

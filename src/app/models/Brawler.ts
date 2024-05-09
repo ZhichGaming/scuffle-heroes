@@ -25,22 +25,22 @@ export enum BrawlerAttackType {
     THROW,
 }
 
-export type Brawler = {
+export type BrawlerProperties = {
     name: string;
     maxHealth: number;
     speed: BrawlerSpeed;
 
     attackName: string;
     attackProjectileCount: number;
-    attackProjectile: BrawlerAttack;
+    attackProjectile: BrawlerAttackProperties;
     reloadSpeed: number;
 
     superName: string;
     superProjectileCount: number;
-    superProjectile: BrawlerAttack;
+    superProjectile: BrawlerAttackProperties;
 }
 
-export type BrawlerAttack = {
+export type BrawlerAttackProperties = {
     projectileDamage: number;
     appliedEffects: BrawlerEffect[];
     appliedEffectDuration: number;
