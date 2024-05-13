@@ -10,14 +10,14 @@ import { BrawlerProperties } from './models/Brawler';
 import { starrpark } from './models/maps/starrpark';
 import getMiddlePoint from './utils/getMiddlePoint';
 import { get } from 'http';
-import GameObstacle, { GameObstacleProperties } from './models/GameObstacle';
+import GameObstacle, { GameObstacleBiome, GameObstacleProperties, obstacleModelScale } from './models/GameObstacle';
 import { bush } from './models/obstacles/bush';
-import { woodenBox } from './models/obstacles/woodenBox';
-import { woodenBarrel } from './models/obstacles/woodenBarrel';
-import { powerCubeBox } from './models/obstacles/powerCubeBox';
-import { skulls } from './models/obstacles/skulls';
-import { unbreakableWall } from './models/obstacles/unbreakableWall';
-import { gemSpawner } from './models/obstacles/gemSpawner';
+import { wBox } from './models/obstacles/woodenBox';
+import { wBar } from './models/obstacles/woodenBarrel';
+import { cBox } from './models/obstacles/powerCubeBox';
+import { skul } from './models/obstacles/skulls';
+import { uWal } from './models/obstacles/unbreakableWall';
+import { gemS } from './models/obstacles/gemSpawner';
 
 export const brawlers: BrawlerProperties[] = [
     nita,
@@ -29,13 +29,13 @@ export const maps: GameMap[] = [
 ]
 
 export const obstacles: GameObstacleProperties[] = [
-    woodenBox,
-    woodenBarrel,
+    wBox,
+    wBar,
     bush,
-    powerCubeBox,
-    skulls,
-    unbreakableWall,
-    gemSpawner
+    cBox,
+    skul,
+    uWal,
+    gemS
 ]
 
 const BLOOM_SCENE = 1;
@@ -60,6 +60,7 @@ export default class Game {
     private bloomParams: any;
 
     private directionalLight?: THREE.DirectionalLight;
+    private obstaclesModel?: THREE.Object3D;
 
     stopped = false;
     private handleEnd: () => void;
@@ -132,33 +133,10 @@ export default class Game {
         this.scene.add(ambientLight);
 
         this.loadSkybox();
+        this.loadModels();
 
         // const gridHelper = new THREE.GridHelper(100, 100);
         // this.scene.add( gridHelper );
-
-        
-
-        this.loader.load('/items/source/brawl/Project Name.gltf', (gltf) => {
-            gltf.scene.position.set(0, 0, 0);
-            gltf.scene.scale.set(100, 100, 100);
-            gltf.scene.translateZ(10)
-
-            const itemIndexes = [11]
-
-            for (let i = gltf.scene.children.length - 1; i >= 0; i--) {
-                // const index = gltf.scene.children.length - i - 1;
-                const child = gltf.scene.children[i];
-
-                if (!itemIndexes.includes(i))
-                    child.removeFromParent();
-            }
-
-            // const box = new THREE.Box3().setFromObject(gltf.scene);
-            // const helper = new THREE.Box3Helper(box, 0xffff00);
-            // this.scene.add(helper);
-
-            this.scene.add(gltf.scene);
-        });
 
         this.camera.position.z = 5;
 
@@ -199,8 +177,6 @@ export default class Game {
         this.directionalLight.position.set(getMiddlePoint(game.map).x, 5, 0);
         this.directionalLight.target.position.set(getMiddlePoint(game.map).x, 0, getMiddlePoint(game.map).z);
         this.scene.add(this.directionalLight);
-        // const helper = new THREE.DirectionalLightHelper(directionalLight);
-        // this.scene.add(helper);
 
         // const sphere1 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), new THREE.MeshStandardMaterial({ color: 0xffffff, emissiveIntensity: 1 }));
         // sphere1.position.set(game.map.firstCorner.x, game.map.firstCorner.y, game.map.firstCorner.z);
@@ -210,6 +186,47 @@ export default class Game {
         // this.scene.add(sphere2);
         // this.camera.lookAt(sphere2.position);
         // this.controls.target = sphere2.position;
+
+        game.map.gameObstacles.forEach((obstacle) => {
+            const model = obstacles.find((o) => o.obstacleType === obstacle.obstacleType)?.models[0]?.clone();
+
+            if (model === undefined) throw new Error("Obstacle model is undefined");
+
+            model.position.set(obstacle.position.x, 0, obstacle.position.z);
+
+            const boundingBox = new THREE.Box3().setFromObject(model)
+            const size = boundingBox.getSize(new THREE.Vector3()); 
+            const scaleFactor = obstacle.width! / size.x;
+            model.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+            this.scene.add(model);
+        });
+    }
+
+    private loadModels() {
+        this.loadModel("/items/source/brawl/Project Name.gltf", (gltf) => {
+            this.obstaclesModel = gltf.scene;
+
+            obstacles.forEach((obstacle) => {
+                for (const key in obstacle.modelsProperties) {
+                    const properties = obstacle.modelsProperties[parseInt(key) as GameObstacleBiome];
+
+                    if (properties?.childIndex !== undefined) {
+                        const newScene = new THREE.Scene();
+                        const obstacleModel = this.obstaclesModel!.children[properties.childIndex].clone();
+
+                        obstacleModel.position.set(0, 0, 0);
+                        newScene.add(obstacleModel);
+
+                        obstacle.models[parseInt(key) as GameObstacleBiome] = newScene;
+                    }                    
+                }
+            });
+        });
+    }
+
+    private loadModel(path: string, callback: (gltf: any) => void) {
+        this.loader.load(path, callback);
     }
 
     private loadSkybox() {

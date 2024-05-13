@@ -1,7 +1,7 @@
 import { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from "../GameObstacle";
 
-export let woodenBarrel: GameObstacleProperties = {
-    objectType: GameObstacleType.WOODEN_BARREL,
+export let wBar: GameObstacleProperties = {
+    obstacleType: GameObstacleType.WOODEN_BARREL,
     collision: true,
     unbreakable: false,
     breakable: false,

@@ -27,7 +27,7 @@ export enum GameObstacleBiome {
 }
 
 export type GameObstacleProperties = {
-    objectType: GameObstacleType;
+    obstacleType: GameObstacleType;
     
     collision: boolean;
     unbreakable: boolean; // Whether the obstacle can be destroyed or not by breakable attacks
@@ -39,11 +39,13 @@ export type GameObstacleProperties = {
     models: { [biome in GameObstacleBiome]: THREE.Object3D | undefined };
 }
 
-export default class GameObstacle extends GameObject {
-    objectType: GameObstacleType;
+export const obstacleModelScale = 35;
 
-    constructor(objectType: GameObstacleType) {
+export default class GameObstacle extends GameObject {
+    obstacleType: GameObstacleType;
+
+    constructor(obstacleType: GameObstacleType) {
         super();
-        this.objectType = objectType;
+        this.obstacleType = obstacleType;
     }
 }

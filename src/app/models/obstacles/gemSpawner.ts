@@ -1,7 +1,7 @@
 import { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from "../GameObstacle";
 
-export let gemSpawner: GameObstacleProperties = {
-    objectType: GameObstacleType.GEM_SPAWNER,
+export let gemS: GameObstacleProperties = {
+    obstacleType: GameObstacleType.GEM_SPAWNER,
     collision: true,
     unbreakable: false,
     breakable: false,

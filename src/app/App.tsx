@@ -23,8 +23,10 @@ export default function App() {
         }
 
         game = new Game(handleGameEnd);
-        game.loadGame(gameInfo)
-        game.start()
+        setTimeout(() => {
+            game.loadGame(gameInfo)
+            game.start()
+        }, 1000)
     }, [])
     
     return (

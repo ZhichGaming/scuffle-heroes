@@ -1,7 +1,7 @@
 import { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from "../GameObstacle";
 
-export let powerCubeBox: GameObstacleProperties = {
-    objectType: GameObstacleType.POWER_CUBE_BOX,
+export let cBox: GameObstacleProperties = {
+    obstacleType: GameObstacleType.POWER_CUBE_BOX,
     collision: true,
     unbreakable: false,
     breakable: false,

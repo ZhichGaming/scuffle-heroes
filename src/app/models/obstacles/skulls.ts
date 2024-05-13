@@ -1,7 +1,7 @@
 import { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from "../GameObstacle";
 
-export let skulls: GameObstacleProperties = {
-    objectType: GameObstacleType.SKULLS,
+export let skul: GameObstacleProperties = {
+    obstacleType: GameObstacleType.SKULLS,
     collision: true,
     unbreakable: false,
     breakable: true,

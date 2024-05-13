@@ -24,7 +24,7 @@ import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 
 let obstaclesModel: THREE.Object3D | null = null;
 
-export async function getObstacleModel(itemIndexes: number): Promise<THREE.Object3D> {
+export async function getObstacleModel(itemIndex: number): Promise<THREE.Object3D> {
     if (obstaclesModel === null) {
         await new Promise<void>((resolve) => {
             new GLTFLoader().load('/items/source/brawl/Project Name.gltf', (gltf) => {
@@ -42,7 +42,7 @@ export async function getObstacleModel(itemIndexes: number): Promise<THREE.Objec
     for (let i = model.children.length - 1; i >= 0; i--) {
         const child = model.children[i];
 
-        if (i !== itemIndexes)
+        if (i !== itemIndex)
             child.removeFromParent();
     }
 

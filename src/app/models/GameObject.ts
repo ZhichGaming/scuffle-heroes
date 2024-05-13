@@ -6,6 +6,10 @@ export default class GameObject {
     velocity: THREE.Vector3;
     acceleration: THREE.Vector3;
     rotation: THREE.Quaternion;
+    
+    width?: number;
+    height?: number;
+
     health: number;
     isEntity: boolean;
 
