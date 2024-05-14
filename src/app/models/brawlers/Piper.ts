@@ -1,7 +1,7 @@
 import { BrawlerProperties, BrawlerAttackShape, BrawlerAttackType, BrawlerSpeed, BrawlerType } from "../Brawler";
 
 // Wiki: https://brawlstars.fandom.com/wiki/Piper
-export const nita: BrawlerProperties = {
+export const piper: BrawlerProperties = {
     brawlerType: BrawlerType.PIPER,
 
     name: "Piper",
@@ -11,27 +11,27 @@ export const nita: BrawlerProperties = {
     attackName: "Gunbrella",
     attackProjectileCount: 1,
     attackProjectile: {
-        projectileDamage: 960,
+        projectileDamage: 1700,
         appliedEffects: [],
         appliedEffectDuration: 0,
         attackShape: BrawlerAttackShape.RECTANGLE,
         attackRange: 10,
-        attackWidth: 1.67,
+        attackWidth: 0.67,
         attackType: BrawlerAttackType.NORMAL,
-        superChargePerHit: 0.209,
+        superChargePerHit: 0.41225,
     },
-    reloadSpeed: 1.1,
+    reloadSpeed: 2.3,
 
-    superName: "Overpower",
-    superProjectileCount: 1,
+    superName: "Poppin'",
+    superProjectileCount: 4,
     superProjectile: {
-        projectileDamage: 2000,
+        projectileDamage: 900,
         appliedEffects: [],
         appliedEffectDuration: 0,
         attackShape: BrawlerAttackShape.CIRCLE,
         attackRange: 3.5,
-        attackWidth: 0.5,
+        attackWidth: 8.67,
         attackType: BrawlerAttackType.THROW,
-        superChargePerHit: 0.1,
+        superChargePerHit: 0.2025,
     },
 }
