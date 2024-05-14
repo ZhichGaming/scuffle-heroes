@@ -1,3 +1,7 @@
+export enum BrawlerType {
+    PIPER
+}
+
 export enum BrawlerSpeed {
     VERY_SLOW,
     SLOW,
@@ -26,6 +30,8 @@ export enum BrawlerAttackType {
 }
 
 export type BrawlerProperties = {
+    brawlerType: BrawlerType;
+
     name: string;
     maxHealth: number;
     speed: BrawlerSpeed;
@@ -58,4 +64,12 @@ export type BrawlerAttackProperties = {
 
     // As a decimal, how much the super charge meter increases per hit.
     superChargePerHit: number;
+}
+
+export default class Brawler {
+    brawlerType: BrawlerType;
+
+    constructor(brawlerType: BrawlerType) {
+        this.brawlerType = brawlerType;
+    }
 }

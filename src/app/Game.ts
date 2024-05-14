@@ -69,7 +69,7 @@ export default class Game {
 
     constructor(handleEnd: () => void) {
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') as HTMLCanvasElement });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.loader = new GLTFLoader();
