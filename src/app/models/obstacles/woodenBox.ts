@@ -6,8 +6,8 @@ export let wBox: GameObstacleProperties = {
     unbreakable: false,
     breakable: false,
     modelsProperties: {
-        [GameObstacleBiome.GREEN]: { location: '/items/source/brawl/Project Name.gltf', childIndex: 16 },
-        [GameObstacleBiome.YELLOW]: { location: '/items/source/brawl/Project Name.gltf', childIndex: 15 },
+        [GameObstacleBiome.GREEN]: { location: '/items/source/brawl/Project Name.gltf', childIndex: 15 },
+        [GameObstacleBiome.YELLOW]: { location: '/items/source/brawl/Project Name.gltf', childIndex: 14 },
         [GameObstacleBiome.CYAN]: undefined,
         [GameObstacleBiome.WHITE]: undefined,
         [GameObstacleBiome.PURPLE]: undefined

@@ -1,24 +1,3 @@
-// 1-5 are bushes, yellow, green, blue, purple, white
-// 6: ball
-// 7: bolt
-// 8: gem
-// 9: energy drink
-// 10: power cube
-// 11: unbreakable wall
-// 12: beans looking pouch
-// 13: gift
-// 14: tnt
-// 15: pink box
-// 16: normal box
-// 18: power cube box
-// 21-22: skull
-// 30: fish barrel
-// 32: blue barrel?
-// 37: red barrel
-// 39-40: wooden barrel
-// 42: gem spawner
-// 46: city gem spawner
-
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 

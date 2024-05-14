@@ -187,6 +187,8 @@ export default class Game {
         // this.camera.lookAt(sphere2.position);
         // this.controls.target = sphere2.position;
 
+        const obstaclesScene = new THREE.Scene();
+
         game.map.gameObstacles.forEach((obstacle) => {
             const model = obstacles.find((o) => o.obstacleType === obstacle.obstacleType)?.models[0]?.clone();
 
@@ -196,11 +198,16 @@ export default class Game {
 
             const boundingBox = new THREE.Box3().setFromObject(model)
             const size = boundingBox.getSize(new THREE.Vector3()); 
-            const scaleFactor = obstacle.width! / size.x;
-            model.scale.set(scaleFactor, scaleFactor, scaleFactor);
+            const xScaleFactor = obstacle.width! / size.x;
+            const zScaleFactor = obstacle.height! / size.z;
+            model.scale.set(xScaleFactor, xScaleFactor, zScaleFactor);
 
-            this.scene.add(model);
+            obstaclesScene.add(model);
         });
+
+        
+        obstaclesScene.position.set(0.5, 0, 1);
+        this.scene.add(obstaclesScene);
     }
 
     private loadModels() {
