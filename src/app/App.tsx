@@ -5,6 +5,8 @@ import Game, { maps } from "./Game";
 import React from "react";
 import { GameInfo, GameMode } from "./models/GameInfo";
 import { GameMap } from "./models/GameMap";
+import Brawler from "./models/Brawler";
+import { piper } from "./models/brawlers/Piper";
 
 export let game: Game;
 
@@ -14,10 +16,12 @@ export default function App() {
     }
 
     useEffect(() => {
+        const playerCharacter = new Brawler(piper);
         const gameInfo: GameInfo = {
             gameMode: GameMode.SHOWDOWN,
             map: maps[1],
-            brawlers: [],
+            playerID: playerCharacter.id,
+            brawlers: [playerCharacter],
             duration: 120,
             respawnDuration: 5,
         }

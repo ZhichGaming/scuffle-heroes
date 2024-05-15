@@ -1,3 +1,6 @@
+import GameObject from "./GameObject";
+import * as THREE from "three";
+
 export enum BrawlerType {
     PIPER
 }
@@ -29,6 +32,16 @@ export enum BrawlerAttackType {
     THROW,
 }
 
+export enum BrawlerModelAnimation {
+    GEO = "geo",
+    IDLE = "idle",
+    WALK = "walk",
+    ATTACK = "attack",
+    WIN = "win",
+    LOSE = "lose",
+    PUSHBACK = "pushback",
+}
+
 export type BrawlerProperties = {
     brawlerType: BrawlerType;
 
@@ -44,6 +57,10 @@ export type BrawlerProperties = {
     superName: string;
     superProjectileCount: number;
     superProjectile: BrawlerAttackProperties;
+
+    // Path to the model file.
+    modelsProperties: { [key in BrawlerModelAnimation]: string | undefined };
+    models: { [key in BrawlerModelAnimation]: THREE.Object3D | undefined };
 }
 
 export type BrawlerAttackProperties = {
@@ -66,10 +83,98 @@ export type BrawlerAttackProperties = {
     superChargePerHit: number;
 }
 
-export default class Brawler {
-    brawlerType: BrawlerType;
+export default class Brawler extends GameObject {
+    brawlerProperties: BrawlerProperties;
+    
+    aiming: boolean = false;
+    aimAttackMesh?: THREE.Mesh;
 
-    constructor(brawlerType: BrawlerType) {
-        this.brawlerType = brawlerType;
+    aimingSuper: boolean = false;
+    aimSuperMesh?: THREE.Mesh;
+
+    id = Math.random().toString(36).substring(7);
+
+    constructor(brawlerProperties: BrawlerProperties) {
+        super();
+
+        this.brawlerProperties = brawlerProperties;
+    }
+
+    aimAttack(vector: THREE.Vector3, scene: THREE.Scene) {
+        if (!this.aimAttackMesh) {
+            // Draw a rectangle, circle, or fan from the brawler to the vector.
+            switch (this.brawlerProperties.attackProjectile.attackShape) {
+                case BrawlerAttackShape.RECTANGLE: {
+                    const attackWidth = this.brawlerProperties.attackProjectile.attackWidth;
+                    const attackHeight = this.brawlerProperties.attackProjectile.attackRange;
+                    const attackCenter = vector.clone().sub(this.position);
+
+                    const plane = new THREE.PlaneGeometry(attackWidth, attackHeight);
+                    const material = new THREE.MeshBasicMaterial({ 
+                        opacity: 0.25, 
+                        transparent: true, 
+                        side: THREE.DoubleSide, 
+                        depthWrite: false,
+                        color: 0xffffff
+                    });
+                    const mesh = new THREE.Mesh(plane, material);
+
+                    mesh.position.copy(attackCenter);
+
+                    this.aimAttackMesh = mesh;
+                }
+                case BrawlerAttackShape.CIRCLE: {
+                    const attackRadius = this.brawlerProperties.attackProjectile.attackRange;
+                    const attackCenter = vector.clone().sub(this.position);
+
+                    const circle = new THREE.CircleGeometry(attackRadius, 32);
+                    const material = new THREE.MeshBasicMaterial({ 
+                        opacity: 0.25, 
+                        transparent: true, 
+                        side: THREE.DoubleSide, 
+                        depthWrite: false,
+                        color: 0xffffff
+                    });
+                    const mesh = new THREE.Mesh(circle, material);
+
+                    mesh.position.copy(attackCenter);
+
+                    this.aimAttackMesh = mesh;
+                }
+                case BrawlerAttackShape.FAN: {
+                    const attackRadius = this.brawlerProperties.attackProjectile.attackRange;
+                    const attackWidth = this.brawlerProperties.attackProjectile.attackWidth;
+                    const attackCenter = vector.clone().sub(this.position);
+
+                    const fan = new THREE.Shape();
+                    fan.moveTo(0, 0);
+                    fan.arc(0, 0, attackRadius, -attackWidth / 2, attackWidth / 2);
+
+                    const geometry = new THREE.ShapeGeometry(fan);
+                    const material = new THREE.MeshBasicMaterial({ 
+                        opacity: 0.25, 
+                        transparent: true, 
+                        side: THREE.DoubleSide, 
+                        depthWrite: false,
+                        color: 0xffffff
+                    });
+                    const mesh = new THREE.Mesh(geometry, material);
+
+                    mesh.position.copy(attackCenter);
+
+                    this.aimAttackMesh = mesh;
+                }
+            }
+
+            scene.add(this.aimAttackMesh);
+        }
+
+        this.aimAttackMesh.position.copy(vector.clone().sub(this.position));
+
+        if (!this.aiming) {
+            this.aimAttackMesh.visible = false;
+        } else {
+            this.aimAttackMesh.visible = true;
+        }
     }
 }

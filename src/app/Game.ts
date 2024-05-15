@@ -1,16 +1,14 @@
 import * as THREE from 'three';
-import { nita } from "./models/brawlers/Nita";
-import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, GlitchPass, ShaderPass, RoomEnvironment } from 'three/examples/jsm/Addons.js';
+import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, ShaderPass, RoomEnvironment } from 'three/examples/jsm/Addons.js';
 import { fragmentShader } from './shaders/FragmentShader';
 import { vertexShader } from './shaders/VertexShader';
 import { GameInfo } from './models/GameInfo';
 import { minicity } from './models/maps/minicity';
 import { GameMap } from './models/GameMap';
-import { BrawlerProperties } from './models/Brawler';
+import { BrawlerModelAnimation, BrawlerProperties, BrawlerType } from './models/Brawler';
 import { starrpark } from './models/maps/starrpark';
 import getMiddlePoint from './utils/getMiddlePoint';
-import { get } from 'http';
-import GameObstacle, { GameObstacleBiome, GameObstacleProperties, obstacleModelScale } from './models/GameObstacle';
+import { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from './models/GameObstacle';
 import { bush } from './models/obstacles/bush';
 import { wBox } from './models/obstacles/woodenBox';
 import { wBar } from './models/obstacles/woodenBarrel';
@@ -18,25 +16,27 @@ import { cBox } from './models/obstacles/powerCubeBox';
 import { skul } from './models/obstacles/skulls';
 import { uWal } from './models/obstacles/unbreakableWall';
 import { gemS } from './models/obstacles/gemSpawner';
+import { piper } from './models/brawlers/Piper';
+import getValues from './utils/getValues';
 
-export const brawlers: BrawlerProperties[] = [
-    nita,
-]
+export const brawlers: { [key in BrawlerType]: BrawlerProperties } = {
+    [BrawlerType.PIPER]: piper
+}
 
 export const maps: GameMap[] = [
     minicity,
     starrpark
 ]
 
-export const obstacles: GameObstacleProperties[] = [
-    wBox,
-    wBar,
-    bush,
-    cBox,
-    skul,
-    uWal,
-    gemS
-]
+export const obstacles: { [key in GameObstacleType]: GameObstacleProperties } = {
+    [GameObstacleType.WOODEN_BOX]: wBox,
+    [GameObstacleType.WOODEN_BARREL]: wBar,
+    [GameObstacleType.BUSH]: bush,
+    [GameObstacleType.POWER_CUBE_BOX]: cBox,
+    [GameObstacleType.SKULLS]: skul,
+    [GameObstacleType.UNBREAKABLE_WALL]: uWal,
+    [GameObstacleType.GEM_SPAWNER]: gemS
+}
 
 const BLOOM_SCENE = 1;
 
@@ -48,6 +48,7 @@ export default class Game {
     private renderScene: RenderPass
     private outputPass: OutputPass
     private loader: GLTFLoader;
+    private textureLoader: THREE.TextureLoader;
     private controls: OrbitControls;
     private clock: THREE.Clock;
     private frameCount = 0;
@@ -73,6 +74,7 @@ export default class Game {
         this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') as HTMLCanvasElement });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.loader = new GLTFLoader();
+        this.textureLoader = new THREE.TextureLoader();
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.clock = new THREE.Clock();
         this.materials = [];
@@ -150,6 +152,8 @@ export default class Game {
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
         });
+
+        window.addEventListener('keydown', this.handleKeyDown.bind(this));
     }
 
     public start() {
@@ -190,7 +194,7 @@ export default class Game {
         const obstaclesScene = new THREE.Scene();
 
         game.map.gameObstacles.forEach((obstacle) => {
-            const model = obstacles.find((o) => o.obstacleType === obstacle.obstacleType)?.models[0]?.clone();
+            const model = getValues(obstacles).find((o) => o.obstacleType === obstacle.obstacleType)?.models[0]?.clone();
 
             if (model === undefined) throw new Error("Obstacle model is undefined");
 
@@ -204,17 +208,27 @@ export default class Game {
 
             obstaclesScene.add(model);
         });
-
         
         obstaclesScene.position.set(0.5, 0, 1);
         this.scene.add(obstaclesScene);
+
+        for (const brawler of game.brawlers) {
+            const model = brawler.brawlerProperties.models[BrawlerModelAnimation.GEO]?.clone();
+
+            if (model === undefined) throw new Error("Brawler model is undefined");
+
+            model.position.set(brawler.position.x, 0, brawler.position.z);
+            model.scale.set(10, 10, 10);
+
+            this.scene.add(model);
+        }
     }
 
     private loadModels() {
         this.loadModel("/items/source/brawl/Project Name.gltf", (gltf) => {
             this.obstaclesModel = gltf.scene;
 
-            obstacles.forEach((obstacle) => {
+            getValues(obstacles).forEach((obstacle) => {
                 for (const key in obstacle.modelsProperties) {
                     const properties = obstacle.modelsProperties[parseInt(key) as GameObstacleBiome];
 
@@ -230,6 +244,29 @@ export default class Game {
                 }
             });
         });
+
+        for (const key in brawlers) {
+            const brawler = brawlers[parseInt(key) as BrawlerType];
+
+            for (const key in brawler.modelsProperties) {
+                const path = brawler.modelsProperties[key as BrawlerModelAnimation];
+
+                if (path !== undefined) {
+                    this.loadModel("/brawlers/" + path, (gltf) => {
+                        brawler.models[key as BrawlerModelAnimation] = gltf.scene;
+                        
+                        // this.textureLoader.load("/brawlers/" + brawler.modelsProperties[BrawlerModelAnimation.GEO]?.split("/")[0] + "/textures/Material_baseColor.png", (texture) => {
+                        //     // brawler.models[BrawlerModelAnimation.GEO]!.traverse((child) => {
+                        //     //     if (child instanceof THREE.Mesh) {
+                        //     //         child.material = new THREE.MeshStandardMaterial({ map: texture });
+                        //     //     }
+                        //     // });
+                        //     gltf.scene.material = new THREE.MeshStandardMaterial({ map: texture });
+                        // });
+                    });
+                }
+            }
+        }
     }
 
     private loadModel(path: string, callback: (gltf: any) => void) {
@@ -267,10 +304,36 @@ export default class Game {
         }
     }
 
+    private handleKeyDown(event: KeyboardEvent) {
+        const playerBrawler = this.currentGame?.brawlers.find((brawler) => brawler.id === this.currentGame?.playerID);
+
+        if (playerBrawler !== undefined) {
+            if (event.key === "w") {
+                playerBrawler.position.z += 0.1;
+            }
+
+            if (event.key === "s") {
+                playerBrawler.position.z -= 0.1;
+            }
+
+            if (event.key === "a") {
+                playerBrawler.position.x -= 0.1;
+            }
+
+            if (event.key === "d") {
+                playerBrawler.position.x += 0.1;
+            }
+        }
+
+        
+    }
+
     private animate() {
         const delta = this.clock.getDelta()
         
-        
+        for (const brawler of this.currentGame?.brawlers ?? []) {
+            brawler.model?.position.set(brawler.position.x, 0, brawler.position.z);
+        }
 
         this.controls.update();
 

@@ -1,5 +1,5 @@
+import Brawler from "./Brawler";
 import { GameMap } from "./GameMap";
-import GameObject from "./GameObject";
 
 export enum GameMode {
     SHOWDOWN = 'showdown',
@@ -9,7 +9,8 @@ export enum GameMode {
 export type GameInfo = {
     gameMode: GameMode;
     map: GameMap;
-    brawlers: GameObject[];
+    playerID?: string;
+    brawlers: Brawler[];
     duration: number;
     respawnDuration: number;
 };

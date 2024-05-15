@@ -1,7 +1,7 @@
-import { BrawlerProperties, BrawlerAttackShape, BrawlerAttackType, BrawlerSpeed, BrawlerType } from "../Brawler";
+import { BrawlerProperties, BrawlerAttackShape, BrawlerAttackType, BrawlerSpeed, BrawlerType, BrawlerModelAnimation } from "../Brawler";
 
 // Wiki: https://brawlstars.fandom.com/wiki/Piper
-export const piper: BrawlerProperties = {
+export let piper: BrawlerProperties = {
     brawlerType: BrawlerType.PIPER,
 
     name: "Piper",
@@ -29,9 +29,27 @@ export const piper: BrawlerProperties = {
         appliedEffects: [],
         appliedEffectDuration: 0,
         attackShape: BrawlerAttackShape.CIRCLE,
-        attackRange: 3.5,
+        attackRange: 10,
         attackWidth: 8.67,
         attackType: BrawlerAttackType.THROW,
         superChargePerHit: 0.2025,
     },
+    modelsProperties: {
+        [BrawlerModelAnimation.GEO]: "piper_lunar/geo.glb",
+        [BrawlerModelAnimation.IDLE]: "piper_lunar/idle.glb",
+        [BrawlerModelAnimation.WALK]: "piper_lunar/walk.glb",
+        [BrawlerModelAnimation.ATTACK]: "piper_lunar/attack.glb",
+        [BrawlerModelAnimation.WIN]: undefined,
+        [BrawlerModelAnimation.LOSE]: undefined,
+        [BrawlerModelAnimation.PUSHBACK]: "piper_lunar/pushback.glb",
+    },
+    models: {
+        [BrawlerModelAnimation.GEO]: undefined,
+        [BrawlerModelAnimation.IDLE]: undefined,
+        [BrawlerModelAnimation.WALK]: undefined,
+        [BrawlerModelAnimation.ATTACK]: undefined,
+        [BrawlerModelAnimation.WIN]: undefined,
+        [BrawlerModelAnimation.LOSE]: undefined,
+        [BrawlerModelAnimation.PUSHBACK]: undefined,
+    }
 }
