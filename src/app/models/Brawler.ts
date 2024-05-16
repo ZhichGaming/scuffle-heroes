@@ -33,13 +33,11 @@ export enum BrawlerAttackType {
 }
 
 export enum BrawlerModelAnimation {
-    GEO = "geo",
     IDLE = "idle",
     WALK = "walk",
     ATTACK = "attack",
     WIN = "win",
     LOSE = "lose",
-    PUSHBACK = "pushback",
 }
 
 export type BrawlerProperties = {
@@ -48,6 +46,7 @@ export type BrawlerProperties = {
     name: string;
     maxHealth: number;
     speed: BrawlerSpeed;
+    id: string;
 
     attackName: string;
     attackProjectileCount: number;
@@ -59,7 +58,7 @@ export type BrawlerProperties = {
     superProjectile: BrawlerAttackProperties;
 
     // Path to the model file.
-    modelsProperties: { [key in BrawlerModelAnimation]: string | undefined };
+    // modelsProperties: { [key in BrawlerModelAnimation]: string | undefined };
     models: { [key in BrawlerModelAnimation]: THREE.Object3D | undefined };
 }
 

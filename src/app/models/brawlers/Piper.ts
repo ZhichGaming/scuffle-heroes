@@ -7,6 +7,7 @@ export let piper: BrawlerProperties = {
     name: "Piper",
     maxHealth: 2300,
     speed: BrawlerSpeed.NORMAL,
+    id: "piper",
 
     attackName: "Gunbrella",
     attackProjectileCount: 1,
@@ -34,22 +35,11 @@ export let piper: BrawlerProperties = {
         attackType: BrawlerAttackType.THROW,
         superChargePerHit: 0.2025,
     },
-    modelsProperties: {
-        [BrawlerModelAnimation.GEO]: "piper_lunar/geo.glb",
-        [BrawlerModelAnimation.IDLE]: "piper_lunar/idle.glb",
-        [BrawlerModelAnimation.WALK]: "piper_lunar/walk.glb",
-        [BrawlerModelAnimation.ATTACK]: "piper_lunar/attack.glb",
-        [BrawlerModelAnimation.WIN]: undefined,
-        [BrawlerModelAnimation.LOSE]: undefined,
-        [BrawlerModelAnimation.PUSHBACK]: "piper_lunar/pushback.glb",
-    },
     models: {
-        [BrawlerModelAnimation.GEO]: undefined,
         [BrawlerModelAnimation.IDLE]: undefined,
         [BrawlerModelAnimation.WALK]: undefined,
         [BrawlerModelAnimation.ATTACK]: undefined,
         [BrawlerModelAnimation.WIN]: undefined,
         [BrawlerModelAnimation.LOSE]: undefined,
-        [BrawlerModelAnimation.PUSHBACK]: undefined,
     }
 }

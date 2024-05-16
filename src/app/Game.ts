@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, ShaderPass, RoomEnvironment } from 'three/examples/jsm/Addons.js';
+import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, ShaderPass, RoomEnvironment, ColladaLoader } from 'three/examples/jsm/Addons.js';
 import { fragmentShader } from './shaders/FragmentShader';
 import { vertexShader } from './shaders/VertexShader';
 import { GameInfo } from './models/GameInfo';
@@ -18,6 +18,7 @@ import { uWal } from './models/obstacles/unbreakableWall';
 import { gemS } from './models/obstacles/gemSpawner';
 import { piper } from './models/brawlers/Piper';
 import getValues from './utils/getValues';
+import { Controller } from './Controller';
 
 export const brawlers: { [key in BrawlerType]: BrawlerProperties } = {
     [BrawlerType.PIPER]: piper
@@ -47,7 +48,7 @@ export default class Game {
     private finalComposer: EffectComposer
     private renderScene: RenderPass
     private outputPass: OutputPass
-    private loader: GLTFLoader;
+    private loader: ColladaLoader;
     private textureLoader: THREE.TextureLoader;
     private controls: OrbitControls;
     private clock: THREE.Clock;
@@ -66,6 +67,8 @@ export default class Game {
     stopped = false;
     private handleEnd: () => void;
 
+    private controller: Controller;
+
     currentGame?: GameInfo;
 
     constructor(handleEnd: () => void) {
@@ -73,7 +76,7 @@ export default class Game {
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') as HTMLCanvasElement });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.loader = new GLTFLoader();
+        this.loader = new ColladaLoader();
         this.textureLoader = new THREE.TextureLoader();
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.clock = new THREE.Clock();
@@ -137,6 +140,8 @@ export default class Game {
         this.loadSkybox();
         this.loadModels();
 
+        this.controller = new Controller();
+
         // const gridHelper = new THREE.GridHelper(100, 100);
         // this.scene.add( gridHelper );
 
@@ -152,8 +157,6 @@ export default class Game {
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
         });
-
-        window.addEventListener('keydown', this.handleKeyDown.bind(this));
     }
 
     public start() {
@@ -213,12 +216,13 @@ export default class Game {
         this.scene.add(obstaclesScene);
 
         for (const brawler of game.brawlers) {
-            const model = brawler.brawlerProperties.models[BrawlerModelAnimation.GEO]?.clone();
+            const model = brawler.brawlerProperties.models[BrawlerModelAnimation.IDLE]?.clone();
 
             if (model === undefined) throw new Error("Brawler model is undefined");
 
             model.position.set(brawler.position.x, 0, brawler.position.z);
-            model.scale.set(10, 10, 10);
+
+            brawler.model = model;
 
             this.scene.add(model);
         }
@@ -248,21 +252,17 @@ export default class Game {
         for (const key in brawlers) {
             const brawler = brawlers[parseInt(key) as BrawlerType];
 
-            for (const key in brawler.modelsProperties) {
-                const path = brawler.modelsProperties[key as BrawlerModelAnimation];
+            for (const key in BrawlerModelAnimation) {
+                const path = "/brawlers/" + brawler.id + "/" + brawler.id + "_" + key.toLowerCase() + ".dae";
+                console.log(path)
 
                 if (path !== undefined) {
-                    this.loadModel("/brawlers/" + path, (gltf) => {
-                        brawler.models[key as BrawlerModelAnimation] = gltf.scene;
-                        
-                        // this.textureLoader.load("/brawlers/" + brawler.modelsProperties[BrawlerModelAnimation.GEO]?.split("/")[0] + "/textures/Material_baseColor.png", (texture) => {
-                        //     // brawler.models[BrawlerModelAnimation.GEO]!.traverse((child) => {
-                        //     //     if (child instanceof THREE.Mesh) {
-                        //     //         child.material = new THREE.MeshStandardMaterial({ map: texture });
-                        //     //     }
-                        //     // });
-                        //     gltf.scene.material = new THREE.MeshStandardMaterial({ map: texture });
-                        // });
+                    this.loadModel(path, (gltf) => {
+                        const newScene = new THREE.Scene();
+
+                        newScene.add(gltf.scene);
+
+                        brawler.models[key as BrawlerModelAnimation] = newScene;
                     });
                 }
             }
@@ -304,35 +304,30 @@ export default class Game {
         }
     }
 
-    private handleKeyDown(event: KeyboardEvent) {
-        const playerBrawler = this.currentGame?.brawlers.find((brawler) => brawler.id === this.currentGame?.playerID);
-
-        if (playerBrawler !== undefined) {
-            if (event.key === "w") {
-                playerBrawler.position.z += 0.1;
-            }
-
-            if (event.key === "s") {
-                playerBrawler.position.z -= 0.1;
-            }
-
-            if (event.key === "a") {
-                playerBrawler.position.x -= 0.1;
-            }
-
-            if (event.key === "d") {
-                playerBrawler.position.x += 0.1;
-            }
-        }
-
-        
-    }
-
     private animate() {
         const delta = this.clock.getDelta()
+
+        const character = this.currentGame?.brawlers.find((brawler) => brawler.id === this.currentGame?.playerID);
+
+        if (character !== undefined) {
+            if (this.controller.keys.up.pressed) {
+                character.position.z += 1;
+            }
+            if (this.controller.keys.down.pressed) {
+                character.position.z -= 1;
+            }
+            if (this.controller.keys.left.pressed) {
+                character.position.x -= 1;
+            }
+            if (this.controller.keys.right.pressed) {
+                character.position.x += 1;
+            }
+        }
         
         for (const brawler of this.currentGame?.brawlers ?? []) {
-            brawler.model?.position.set(brawler.position.x, 0, brawler.position.z);
+            const model = brawler.model;
+
+            model?.position.set(brawler.position.x, 0, brawler.position.z);
         }
 
         this.controls.update();
