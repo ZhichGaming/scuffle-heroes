@@ -30,7 +30,7 @@ export default function App() {
         setTimeout(() => {
             game.loadGame(gameInfo)
             game.start()
-        }, 1000)
+        }, 2000)
     }, [])
     
     return (

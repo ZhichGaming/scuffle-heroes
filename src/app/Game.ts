@@ -49,6 +49,7 @@ export default class Game {
     private renderScene: RenderPass
     private outputPass: OutputPass
     private loader: ColladaLoader;
+    private gltfLoader: GLTFLoader;
     private textureLoader: THREE.TextureLoader;
     private controls: OrbitControls;
     private clock: THREE.Clock;
@@ -77,6 +78,7 @@ export default class Game {
         this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') as HTMLCanvasElement });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.loader = new ColladaLoader();
+        this.gltfLoader = new GLTFLoader();
         this.textureLoader = new THREE.TextureLoader();
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.clock = new THREE.Clock();
@@ -171,7 +173,7 @@ export default class Game {
     public loadGame(game: GameInfo) {
         this.currentGame = game;
 
-        this.loader.load(game.map.backgroundObjectPath, (gltf) => {
+        this.gltfLoader.load(game.map.backgroundObjectPath, (gltf) => {
             gltf.scene.position.set(0, 0, 0);
             this.scene.add(gltf.scene);
         });
@@ -217,6 +219,8 @@ export default class Game {
 
         for (const brawler of game.brawlers) {
             const model = brawler.brawlerProperties.models[BrawlerModelAnimation.IDLE]?.clone();
+            // const model = brawlers[brawler.brawlerProperties.brawlerType].models[BrawlerModelAnimation.IDLE]?.clone();
+            console.log(model)
 
             if (model === undefined) throw new Error("Brawler model is undefined");
 
@@ -224,12 +228,12 @@ export default class Game {
 
             brawler.model = model;
 
-            this.scene.add(model);
+            // this.scene.add(model);
         }
     }
 
     private loadModels() {
-        this.loadModel("/items/source/brawl/Project Name.gltf", (gltf) => {
+        this.gltfLoader.load("/items/source/brawl/Project Name.gltf", (gltf) => {
             this.obstaclesModel = gltf.scene;
 
             getValues(obstacles).forEach((obstacle) => {
@@ -254,23 +258,16 @@ export default class Game {
 
             for (const key in BrawlerModelAnimation) {
                 const path = "/brawlers/" + brawler.id + "/" + brawler.id + "_" + key.toLowerCase() + ".dae";
-                console.log(path)
 
-                if (path !== undefined) {
-                    this.loadModel(path, (gltf) => {
-                        const newScene = new THREE.Scene();
+                this.loader.load(path, (gltf) => {
+                    const newScene = new THREE.Scene();
 
-                        newScene.add(gltf.scene);
+                    newScene.add(gltf.scene);
 
-                        brawler.models[key as BrawlerModelAnimation] = newScene;
-                    });
-                }
+                    brawler.models[key.toLowerCase() as BrawlerModelAnimation] = newScene;
+                });
             }
         }
-    }
-
-    private loadModel(path: string, callback: (gltf: any) => void) {
-        this.loader.load(path, callback);
     }
 
     private loadSkybox() {
