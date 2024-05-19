@@ -8,6 +8,7 @@ import { GameMap } from "./models/GameMap";
 import Brawler from "./models/Brawler";
 import { piper } from "./models/brawlers/Piper";
 import MainMenu from "./MainMenu";
+import "./transition.css";
 
 export let game: Game;
 
@@ -44,9 +45,13 @@ export default function App() {
     }, [])
     
     return (
-        <div>
-            <MainMenu gameInfo={gameInfo} handlePressStart={handlePressStart}/>
-            <canvas id="canvas"></canvas>
+        <div className="bg-black w-screen h-screen">
+            <div id="app-container" className="w-full h-full">
+                <div id="menu-container" className="absolute displayed w-full h-full">
+                    <MainMenu gameInfo={gameInfo} handlePressStart={handlePressStart}/>
+                </div>
+                <canvas id="canvas" className="absolute"></canvas>
+            </div>
         </div>
     );
 }

@@ -1,0 +1,34 @@
+/* from https://speckyboy.com/page-transition-effects/ */
+
+.animate_tv {
+    animation: tv_transition 3s ease;
+}
+
+.displayed {
+    z-index: 10;
+}
+
+.undisplayed {
+    z-index: 0;
+}
+
+@keyframes tv_transition {
+    10% {
+        transform: scale(1, 0.002);
+    }
+    35% {
+        transform: scale(0.2, 0.002);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(0.2, 0.002);
+        opacity: 0;
+    }
+    85% {
+        transform: scale(1, 0.002);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1, 1);
+    }
+}
