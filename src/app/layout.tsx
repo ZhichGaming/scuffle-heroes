@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./i18n/config";
 import "./globals.css";
 import React from "react";
 
-const inter = Inter({ subsets: ["latin"] });
+const poesten = localFont({ src: "./fonts/PoetsenOne-Regular.ttf" });
 
 export const metadata: Metadata = {
   title: "Scuffle Heroes",
@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={poesten.className}>{children}</body>
     </html>
   );
 }

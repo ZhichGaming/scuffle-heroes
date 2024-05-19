@@ -49,6 +49,8 @@ export const starrpark: GameMap = {
     backgroundObjectPath: "maps/environment-training-cave/scene.gltf",
     backgroundObject: undefined,
 
+    bannerImageFileName: "banner_map_8b.png",
+
     firstCorner: new THREE.Vector3(0, 0, 0),
     secondCorner: new THREE.Vector3(17, 0, 33),
     xBlockAmount: 17,

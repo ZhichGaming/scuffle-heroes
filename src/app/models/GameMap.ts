@@ -10,6 +10,8 @@ export type GameMap = {
     backgroundObjectPath: string;
     backgroundObject?: THREE.Object3D;
 
+    bannerImageFileName?: string;
+
     firstCorner: THREE.Vector3;
     secondCorner: THREE.Vector3;
     xBlockAmount: number;
