@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, ShaderPass, RoomEnvironment, ColladaLoader } from 'three/examples/jsm/Addons.js';
+import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, ShaderPass, RoomEnvironment } from 'three/examples/jsm/Addons.js';
 import { fragmentShader } from './shaders/FragmentShader';
 import { vertexShader } from './shaders/VertexShader';
 import { GameInfo } from './models/GameInfo';
@@ -48,7 +48,6 @@ export default class Game {
     private finalComposer: EffectComposer
     private renderScene: RenderPass
     private outputPass: OutputPass
-    private loader: ColladaLoader;
     private gltfLoader: GLTFLoader;
     private textureLoader: THREE.TextureLoader;
     private controls: OrbitControls;
@@ -77,7 +76,6 @@ export default class Game {
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') as HTMLCanvasElement });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.loader = new ColladaLoader();
         this.gltfLoader = new GLTFLoader();
         this.textureLoader = new THREE.TextureLoader();
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -149,6 +147,20 @@ export default class Game {
 
         this.camera.position.z = 5;
 
+        // const path = "/brawlers/piper/piper_idle.gltf";
+        // this.gltfLoader.load(path, (collada) => {
+        //     const model = collada.scene;
+
+        //     model.position.set(0, 0, 0);
+        //     model.scale.set(0, 0, 0)
+
+        //     this.scene.add(model);
+        // });
+        
+        // setTimeout(() => {
+        //     this.renderer.render(this.scene, this.camera);
+        // }, 5000);
+
         // Resize canvas on window resize
         window.addEventListener('resize', () => {
             const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -218,9 +230,8 @@ export default class Game {
         this.scene.add(obstaclesScene);
 
         for (const brawler of game.brawlers) {
-            const model = brawler.brawlerProperties.models[BrawlerModelAnimation.IDLE]?.clone();
+            const model = brawler.brawlerProperties.models[BrawlerModelAnimation.IDLE];
             // const model = brawlers[brawler.brawlerProperties.brawlerType].models[BrawlerModelAnimation.IDLE]?.clone();
-            console.log(model)
 
             if (model === undefined) throw new Error("Brawler model is undefined");
 
@@ -228,7 +239,7 @@ export default class Game {
 
             brawler.model = model;
 
-            // this.scene.add(model);
+            this.scene.add(model);
         }
     }
 
@@ -257,15 +268,24 @@ export default class Game {
             const brawler = brawlers[parseInt(key) as BrawlerType];
 
             for (const key in BrawlerModelAnimation) {
-                const path = "/brawlers/" + brawler.id + "/" + brawler.id + "_" + key.toLowerCase() + ".dae";
+                const path = "/brawlers/" + brawler.id + "/" + brawler.id + "_" + key.toLowerCase() + ".gltf";
 
-                this.loader.load(path, (gltf) => {
-                    const newScene = new THREE.Scene();
+                this.gltfLoader.load(path, (gltf) => {
+                    // TODO: Fix textures
+                    const texture = this.textureLoader.load("/brawlers/" + brawler.id + "/" + brawler.id + "_tex.png");
+                    // texture.flipY = false;
+                    texture.colorSpace = THREE.SRGBColorSpace;
 
-                    newScene.add(gltf.scene);
+                    const mesh = gltf.scene.children[0] as THREE.Mesh;
+                    mesh.material = new THREE.MeshBasicMaterial({ map: texture });
 
-                    brawler.models[key.toLowerCase() as BrawlerModelAnimation] = newScene;
+                    brawler.models[key.toLowerCase() as BrawlerModelAnimation] = gltf.scene;
                 });
+                // const geo = new THREE.BoxGeometry(10, 10);
+                // const material = new THREE.MeshBasicMaterial();
+                // const mesh = new THREE.Mesh(geo, material)
+
+                // brawler.models[key.toLowerCase() as BrawlerModelAnimation] = mesh;
             }
         }
     }
