@@ -6,6 +6,7 @@ export enum BrawlerType {
 }
 
 export enum BrawlerSpeed {
+    IMMOBILE,
     VERY_SLOW,
     SLOW,
     NORMAL,
@@ -84,6 +85,8 @@ export type BrawlerAttackProperties = {
 
 export default class Brawler extends GameObject {
     brawlerProperties: BrawlerProperties;
+    
+    team: number = 0;
     
     aiming: boolean = false;
     aimAttackMesh?: THREE.Mesh;

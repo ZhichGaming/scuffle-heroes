@@ -236,6 +236,7 @@ export default class Game {
             if (model === undefined) throw new Error("Brawler model is undefined");
 
             model.position.set(brawler.position.x, 0, brawler.position.z);
+            model.scale.set(0.15, 0.15, 0.15);
 
             brawler.model = model;
 
@@ -327,24 +328,47 @@ export default class Game {
         const character = this.currentGame?.brawlers.find((brawler) => brawler.id === this.currentGame?.playerID);
 
         if (character !== undefined) {
+            const speed = character.brawlerProperties.speed * delta * 60 / 30;
+
+            const movementVector = new THREE.Vector3();
+
             if (this.controller.keys.up.pressed) {
-                character.position.z += 1;
+                movementVector.z -= 1;
             }
             if (this.controller.keys.down.pressed) {
-                character.position.z -= 1;
+                movementVector.z += 1;
             }
             if (this.controller.keys.left.pressed) {
-                character.position.x -= 1;
+                movementVector.x -= 1;
             }
             if (this.controller.keys.right.pressed) {
-                character.position.x += 1;
+                movementVector.x += 1;
             }
+            
+            movementVector.normalize();
+            movementVector.multiplyScalar(speed);
+
+            character.velocity = movementVector;
+
+            character.update(delta);
         }
         
         for (const brawler of this.currentGame?.brawlers ?? []) {
             const model = brawler.model;
 
-            model?.position.set(brawler.position.x, 0, brawler.position.z);
+            if (model === undefined) continue;
+
+            model.position.set(brawler.position.x, 0, brawler.position.z);
+
+            // Rotate the character
+            if (brawler.velocity.length() > 0) {
+                // model.rotation.y = Math.atan2(brawler.velocity.x, brawler.velocity.z);
+                
+                // Quaternion rotation
+                const quaternion = new THREE.Quaternion();
+                quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), brawler.velocity.normalize());
+                model.quaternion.slerp(quaternion, 0.2);
+            }
         }
 
         this.controls.update();

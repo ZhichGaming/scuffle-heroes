@@ -23,4 +23,9 @@ export default class GameObject {
         this.health = -1;
         this.isEntity = false;
     }
+
+    update(delta: number) {
+        this.position.add(this.velocity.clone().multiplyScalar(delta * 60));
+        this.velocity.add(this.acceleration.clone().multiplyScalar(delta * 60));
+    }
 }
