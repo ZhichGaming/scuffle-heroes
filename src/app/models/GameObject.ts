@@ -14,6 +14,7 @@ export default class GameObject {
     isEntity: boolean;
 
     model?: THREE.Object3D;
+    mixer?: THREE.AnimationMixer;
 
     constructor() {
         this.position = new THREE.Vector3();

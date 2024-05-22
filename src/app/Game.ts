@@ -5,7 +5,7 @@ import { vertexShader } from './shaders/VertexShader';
 import { GameInfo } from './models/GameInfo';
 import { minicity } from './models/maps/minicity';
 import { GameMap } from './models/GameMap';
-import { BrawlerModelAnimation, BrawlerProperties, BrawlerType } from './models/Brawler';
+import Brawler, { BrawlerModelAnimation, BrawlerProperties, BrawlerType } from './models/Brawler';
 import { starrpark } from './models/maps/starrpark';
 import getMiddlePoint from './utils/getMiddlePoint';
 import { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from './models/GameObstacle';
@@ -230,17 +230,21 @@ export default class Game {
         this.scene.add(obstaclesScene);
 
         for (const brawler of game.brawlers) {
-            const model = brawler.brawlerProperties.models[BrawlerModelAnimation.IDLE];
-            // const model = brawlers[brawler.brawlerProperties.brawlerType].models[BrawlerModelAnimation.IDLE]?.clone();
+            for (const key in BrawlerModelAnimation) {
+                const model = brawlers[brawler.brawlerProperties.brawlerType].models[key.toLowerCase() as BrawlerModelAnimation];
+                // const model = brawlers[brawler.brawlerProperties.brawlerType].models[BrawlerModelAnimation.IDLE]?.clone();
 
-            if (model === undefined) throw new Error("Brawler model is undefined");
+                if (model === undefined) {
+                    console.error("Model is undefined");
+                    continue;
+                }
 
-            model.position.set(brawler.position.x, 0, brawler.position.z);
-            model.scale.set(0.15, 0.15, 0.15);
+                model.position.set(brawler.position.x, 0, brawler.position.z);
+                model.scale.set(0.15, 0.15, 0.15);
+            }
 
-            brawler.model = model;
-
-            this.scene.add(model);
+            brawler.state = BrawlerModelAnimation.IDLE;
+            this.setModel(brawler, BrawlerModelAnimation.IDLE);
         }
     }
 
@@ -279,8 +283,10 @@ export default class Game {
 
                     const mesh = gltf.scene.children[0] as THREE.Mesh;
                     mesh.material = new THREE.MeshBasicMaterial({ map: texture });
-
+                    
                     brawler.models[key.toLowerCase() as BrawlerModelAnimation] = gltf.scene;
+                    if (gltf.animations.length > 0)
+                        brawler.modelsAnimations[key.toLowerCase() as BrawlerModelAnimation] = gltf.animations[0];
                 });
                 // const geo = new THREE.BoxGeometry(10, 10);
                 // const material = new THREE.MeshBasicMaterial();
@@ -306,6 +312,20 @@ export default class Game {
         const mesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
 
         this.scene.add( mesh );
+    }
+
+    private setModel(brawler: Brawler, animation: BrawlerModelAnimation) {
+        const oldModel = brawler.model;
+        if (oldModel) this.scene.remove(oldModel);
+
+        brawler.model = brawlers[brawler.brawlerProperties.brawlerType].models[animation];
+        brawler.model?.position.set(brawler.position.x, 0, brawler.position.z);
+        brawler.model?.rotation.copy(oldModel?.rotation ?? new THREE.Euler(0, 0, 0));
+
+        brawler.mixer = new THREE.AnimationMixer(brawler.model!);
+        brawler.mixer.clipAction(brawler.brawlerProperties.modelsAnimations[animation]!).play();
+
+        this.scene.add(brawler.model!);
     }
     
     private nonBloomed(obj: any) {
@@ -355,8 +375,16 @@ export default class Game {
         
         for (const brawler of this.currentGame?.brawlers ?? []) {
             const model = brawler.model;
-
+            
             if (model === undefined) continue;
+            
+            if (brawler.state !== BrawlerModelAnimation.WALK && brawler.velocity.length() > 0) {
+                this.setModel(brawler, BrawlerModelAnimation.WALK);
+                brawler.state = BrawlerModelAnimation.WALK;
+            } else if (brawler.state !== BrawlerModelAnimation.IDLE && brawler.velocity.length() === 0) {
+                this.setModel(brawler, BrawlerModelAnimation.IDLE);
+                brawler.state = BrawlerModelAnimation.IDLE;
+            }
 
             model.position.set(brawler.position.x, 0, brawler.position.z);
 
@@ -369,6 +397,9 @@ export default class Game {
                 quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), brawler.velocity.normalize());
                 model.quaternion.slerp(quaternion, 0.2);
             }
+
+
+            brawler.mixer?.update(delta);
         }
 
         this.controls.update();

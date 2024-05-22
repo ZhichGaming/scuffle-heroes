@@ -61,6 +61,7 @@ export type BrawlerProperties = {
     // Path to the model file.
     // modelsProperties: { [key in BrawlerModelAnimation]: string | undefined };
     models: { [key in BrawlerModelAnimation]: THREE.Object3D | undefined };
+    modelsAnimations: { [key in BrawlerModelAnimation]: THREE.AnimationClip | undefined };
 }
 
 export type BrawlerAttackProperties = {
@@ -87,6 +88,8 @@ export default class Brawler extends GameObject {
     brawlerProperties: BrawlerProperties;
     
     team: number = 0;
+
+    state: BrawlerModelAnimation = BrawlerModelAnimation.IDLE;
     
     aiming: boolean = false;
     aimAttackMesh?: THREE.Mesh;

@@ -41,5 +41,12 @@ export let piper: BrawlerProperties = {
         [BrawlerModelAnimation.ATTACK]: undefined,
         [BrawlerModelAnimation.WIN]: undefined,
         [BrawlerModelAnimation.LOSE]: undefined,
+    },
+    modelsAnimations: {
+        [BrawlerModelAnimation.IDLE]: undefined,
+        [BrawlerModelAnimation.WALK]: undefined,
+        [BrawlerModelAnimation.ATTACK]: undefined,
+        [BrawlerModelAnimation.WIN]: undefined,
+        [BrawlerModelAnimation.LOSE]: undefined
     }
 }
