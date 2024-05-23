@@ -73,7 +73,7 @@ export default class Game {
 
     constructor(handleEnd: () => void) {
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera = new THREE.PerspectiveCamera(15, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') as HTMLCanvasElement });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.gltfLoader = new GLTFLoader();
@@ -190,14 +190,18 @@ export default class Game {
             this.scene.add(gltf.scene);
         });
 
-        this.camera.position.set(getMiddlePoint(game.map).x, 1, 2 * getMiddlePoint(game.map).z);
-        this.camera.lookAt(getMiddlePoint(game.map).x, 10, 0);
-        this.controls.target = new THREE.Vector3(getMiddlePoint(game.map).x, 10, 0);
+        this.camera.position.set(getMiddlePoint(game.map).x, 50, 40);
+        this.camera.lookAt(getMiddlePoint(game.map).x, 0, 0);
+        this.controls.target = new THREE.Vector3(getMiddlePoint(game.map).x, 0, 0);
 
-        this.directionalLight = new THREE.DirectionalLight(0xffffff, 10);
+        const wasExisting = this.directionalLight !== undefined;
+        this.directionalLight = new THREE.DirectionalLight(0xffffff, 20);
         this.directionalLight.position.set(getMiddlePoint(game.map).x, 5, 0);
         this.directionalLight.target.position.set(getMiddlePoint(game.map).x, 0, getMiddlePoint(game.map).z);
-        this.scene.add(this.directionalLight);
+
+        if (!wasExisting) {
+            this.scene.add(this.directionalLight);
+        }
 
         // const sphere1 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), new THREE.MeshStandardMaterial({ color: 0xffffff, emissiveIntensity: 1 }));
         // sphere1.position.set(game.map.firstCorner.x, game.map.firstCorner.y, game.map.firstCorner.z);
@@ -371,6 +375,12 @@ export default class Game {
             character.velocity = movementVector;
 
             character.update(delta);
+
+            const prevCameraTarget = this.controls.target.clone();
+            const newCameraTarget = new THREE.Vector3(prevCameraTarget.x, prevCameraTarget.y, character.position.z);
+            this.camera.position.setZ(character.position.z + 50)
+            this.camera.lookAt(newCameraTarget);
+            this.controls.target = newCameraTarget
         }
         
         for (const brawler of this.currentGame?.brawlers ?? []) {
