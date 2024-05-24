@@ -2,7 +2,7 @@ import { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from "../
 
 export let bush: GameObstacleProperties = {
     obstacleType: GameObstacleType.BUSH,
-    collision: true,
+    collision: false,
     unbreakable: false,
     breakable: false,
     modelsProperties: {

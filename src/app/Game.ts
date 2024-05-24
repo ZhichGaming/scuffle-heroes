@@ -219,7 +219,9 @@ export default class Game {
 
             if (model === undefined) throw new Error("Obstacle model is undefined");
 
-            model.position.set(obstacle.position.x, 0, obstacle.position.z);
+            obstacle.model = model;
+            // I'm not sure why I have to add 0.5 to the x and 1 to the z, but centers it
+            model.position.set(obstacle.position.x + 0.5, 0, obstacle.position.z + 1);
 
             const boundingBox = new THREE.Box3().setFromObject(model)
             const size = boundingBox.getSize(new THREE.Vector3()); 
@@ -229,8 +231,8 @@ export default class Game {
 
             obstaclesScene.add(model);
         });
-        
-        obstaclesScene.position.set(0.5, 0, 1);
+
+        // obstaclesScene.position.set(0.5, 0, 1);
         this.scene.add(obstaclesScene);
 
         for (const brawler of game.brawlers) {
@@ -346,6 +348,35 @@ export default class Game {
         }
     }
 
+    private getUncollidingVelocity(brawler: Brawler, direction: THREE.Vector3): THREE.Vector3 {
+        const boundingBox = new THREE.Box3().setFromObject(brawler.model!);
+        const brawlerSize = boundingBox.getSize(new THREE.Vector3());
+
+        const newPosition = brawler.model!.position.clone().add(direction);
+
+        const finalDirection = direction.clone();
+
+        for (const obstacle of this.currentGame?.map.gameObstacles ?? []) {
+            if (obstacle.getObstacleProperties().collision === false) continue;
+            if (obstacle.model === undefined) continue;
+
+            const obstacleBoundingBox = new THREE.Box3().setFromObject(obstacle.model);
+            const obstacleSize = obstacleBoundingBox.getSize(new THREE.Vector3());
+
+            if (newPosition.x < obstacle.model.position.x + obstacleSize.x &&
+                newPosition.x + brawlerSize.x > obstacle.model.position.x &&
+                newPosition.z < obstacle.model.position.z + obstacleSize.z &&
+                newPosition.z + brawlerSize.z > obstacle.model.position.z) {
+                
+                // Collision
+                finalDirection.x = 0;
+                finalDirection.z = 0;
+            }
+        }
+
+        return finalDirection;
+    }
+
     private animate() {
         const delta = this.clock.getDelta()
 
@@ -372,7 +403,7 @@ export default class Game {
             movementVector.normalize();
             movementVector.multiplyScalar(speed);
 
-            character.velocity = movementVector;
+            character.velocity = this.getUncollidingVelocity(character, movementVector);
 
             character.update(delta);
 

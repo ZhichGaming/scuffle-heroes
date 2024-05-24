@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import GameObject from './GameObject';
+import { obstacles } from '../Game';
 
 export enum GameObstacleType {
     // Normal obstacles
@@ -47,5 +48,9 @@ export default class GameObstacle extends GameObject {
     constructor(obstacleType: GameObstacleType) {
         super();
         this.obstacleType = obstacleType;
+    }
+
+    getObstacleProperties(): GameObstacleProperties {
+        return obstacles[this.obstacleType];
     }
 }
