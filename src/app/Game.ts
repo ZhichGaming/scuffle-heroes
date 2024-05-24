@@ -5,7 +5,7 @@ import { vertexShader } from './shaders/VertexShader';
 import { GameInfo } from './models/GameInfo';
 import { minicity } from './models/maps/minicity';
 import { GameMap } from './models/GameMap';
-import Brawler, { BrawlerModelAnimation, BrawlerProperties, BrawlerType } from './models/Brawler';
+import Brawler, { BrawlerAttackShape, BrawlerModelAnimation, BrawlerProperties, BrawlerType } from './models/Brawler';
 import { starrpark } from './models/maps/starrpark';
 import getMiddlePoint from './utils/getMiddlePoint';
 import { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from './models/GameObstacle';
@@ -19,6 +19,9 @@ import { gemS } from './models/obstacles/gemSpawner';
 import { piper } from './models/brawlers/Piper';
 import getValues from './utils/getValues';
 import { Controller } from './Controller';
+import { joystickManager } from './App';
+import { EventData, JoystickOutputData } from 'nipplejs';
+import { cos } from 'three/examples/jsm/nodes/Nodes.js';
 
 export const brawlers: { [key in BrawlerType]: BrawlerProperties } = {
     [BrawlerType.PIPER]: piper
@@ -50,7 +53,7 @@ export default class Game {
     private outputPass: OutputPass
     private gltfLoader: GLTFLoader;
     private textureLoader: THREE.TextureLoader;
-    private controls: OrbitControls;
+    // private controls: OrbitControls;
     private clock: THREE.Clock;
     private frameCount = 0;
 
@@ -78,7 +81,7 @@ export default class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.gltfLoader = new GLTFLoader();
         this.textureLoader = new THREE.TextureLoader();
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.clock = new THREE.Clock();
         this.materials = [];
 
@@ -171,6 +174,9 @@ export default class Game {
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
         });
+
+        joystickManager.on("move", this.onJoystickMove.bind(this));
+        joystickManager.on("end", this.onJoystickRelease.bind(this));
     }
 
     public start() {
@@ -192,7 +198,7 @@ export default class Game {
 
         this.camera.position.set(getMiddlePoint(game.map).x, 50, 40);
         this.camera.lookAt(getMiddlePoint(game.map).x, 0, 0);
-        this.controls.target = new THREE.Vector3(getMiddlePoint(game.map).x, 0, 0);
+        // this.controls.target = new THREE.Vector3(getMiddlePoint(game.map).x, 0, 0);
 
         const wasExisting = this.directionalLight !== undefined;
         this.directionalLight = new THREE.DirectionalLight(0xffffff, 20);
@@ -348,6 +354,118 @@ export default class Game {
         }
     }
 
+    private latestJoystickData?: JoystickOutputData;
+
+    private onJoystickMove(event: EventData, data: JoystickOutputData) {
+        this.latestJoystickData = data;
+        
+        if (this.currentGame === undefined) return;
+
+        const character = this.currentGame.brawlers.find((brawler) => brawler.id === this.currentGame?.playerID);
+
+        if (character === undefined) return;
+
+        if (character.aimAttackMesh === undefined) {
+            // Draw a rectangle, circle, or fan from the brawler to the vector.
+            switch (character.brawlerProperties.attackProjectile.attackShape) {
+                case BrawlerAttackShape.RECTANGLE: {
+                    const attackWidth = character.brawlerProperties.attackProjectile.attackWidth;
+                    const attackHeight = character.brawlerProperties.attackProjectile.attackRange;
+                    const attackCenter = character.position;
+
+                    const plane = new THREE.PlaneGeometry(attackWidth, attackHeight);
+                    const material = new THREE.MeshStandardMaterial({ 
+                        opacity: 0.25, 
+                        transparent: true, 
+                        side: THREE.DoubleSide, 
+                        // depthWrite: false,
+                        color: 0xffffff
+                    });
+                    const mesh = new THREE.Mesh(plane, material);
+
+                    mesh.rotateX(Math.PI / 2);
+                    mesh.position.copy(attackCenter);
+
+                    character.aimAttackMesh = mesh;
+                    this.scene.add(character.aimAttackMesh);
+                }
+                case BrawlerAttackShape.CIRCLE: {
+                    const attackRadius = character.brawlerProperties.attackProjectile.attackRange;
+                    const attackCenter = character.position;
+
+                    const circle = new THREE.CircleGeometry(attackRadius, 32);
+                    const material = new THREE.MeshBasicMaterial({ 
+                        opacity: 0.25, 
+                        transparent: true, 
+                        side: THREE.DoubleSide, 
+                        depthWrite: false,
+                        color: 0xffffff
+                    });
+                    const mesh = new THREE.Mesh(circle, material);
+
+                    mesh.position.copy(attackCenter);
+
+                    character.aimAttackMesh = mesh;
+                }
+                case BrawlerAttackShape.FAN: {
+                    const attackRadius = character.brawlerProperties.attackProjectile.attackRange;
+                    const attackWidth = character.brawlerProperties.attackProjectile.attackWidth;
+                    const attackCenter = character.position;
+
+                    const fan = new THREE.Shape();
+                    fan.moveTo(0, 0);
+                    fan.arc(0, 0, attackRadius, -attackWidth / 2, attackWidth / 2);
+
+                    const geometry = new THREE.ShapeGeometry(fan);
+                    const material = new THREE.MeshBasicMaterial({ 
+                        opacity: 0.25, 
+                        transparent: true, 
+                        side: THREE.DoubleSide, 
+                        depthWrite: false,
+                        color: 0xffffff
+                    });
+                    const mesh = new THREE.Mesh(geometry, material);
+
+                    mesh.position.copy(attackCenter);
+
+                    character.aimAttackMesh = mesh;
+                }
+            }
+        }
+
+        this.positionAimAttackMesh(character, data);
+
+        character.aiming = data.force > 0.3;
+
+        if (!character.aiming) {
+            character.aimAttackMesh.visible = false;
+        } else {
+            character.aimAttackMesh.visible = true;
+        }
+    }
+
+    private positionAimAttackMesh(character: Brawler, data: JoystickOutputData) {
+        if (character.aimAttackMesh === undefined) return;
+
+        character.aimAttackMesh.position.copy(character.position);
+        character.aimAttackMesh.position.y = 0.1;
+        character.aimAttackMesh.position.x += character.brawlerProperties.attackProjectile.attackRange / 2 * Math.sin(data.angle.radian + Math.PI / 2);
+        character.aimAttackMesh.position.z += character.brawlerProperties.attackProjectile.attackRange / 2 * Math.cos(data.angle.radian + Math.PI / 2);
+
+        character.aimAttackMesh.rotation.z = -data.angle.radian + Math.PI / 2;
+    }
+
+    private onJoystickRelease() {
+        if (this.currentGame === undefined) return;
+
+        const character = this.currentGame.brawlers.find((brawler) => brawler.id === this.currentGame?.playerID);
+
+        if (character === undefined) return;
+
+        character.aiming = false;
+        if (character.aimAttackMesh !== undefined) character.aimAttackMesh.visible = false;
+    }
+
     private getUncollidingVelocity(brawler: Brawler, direction: THREE.Vector3): THREE.Vector3 {
         const boundingBox = new THREE.Box3().setFromObject(brawler.model!);
         const brawlerSize = boundingBox.getSize(new THREE.Vector3());
@@ -407,11 +525,14 @@ export default class Game {
 
             character.update(delta);
 
-            const prevCameraTarget = this.controls.target.clone();
-            const newCameraTarget = new THREE.Vector3(prevCameraTarget.x, prevCameraTarget.y, character.position.z);
+
+            const newCameraTarget = new THREE.Vector3(getMiddlePoint(this.currentGame!.map).x, getMiddlePoint(this.currentGame!.map).y, character.position.z);
             this.camera.position.setZ(character.position.z + 50)
             this.camera.lookAt(newCameraTarget);
-            this.controls.target = newCameraTarget
+            // this.controls.target = newCameraTarget
+
+            if (this.latestJoystickData !== undefined)
+                this.positionAimAttackMesh(character, this.latestJoystickData);
         }
         
         for (const brawler of this.currentGame?.brawlers ?? []) {
@@ -443,7 +564,7 @@ export default class Game {
             brawler.mixer?.update(delta);
         }
 
-        this.controls.update();
+        // this.controls.update();
 
         this.scene.traverse(this.nonBloomed.bind(this));
         this.bloomComposer.render();

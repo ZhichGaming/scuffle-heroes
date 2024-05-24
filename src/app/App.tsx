@@ -9,8 +9,10 @@ import Brawler from "./models/Brawler";
 import { piper } from "./models/brawlers/Piper";
 import MainMenu from "./MainMenu";
 import "./transition.css";
+import nipplejs, { JoystickManager, JoystickManagerOptions } from 'nipplejs';
 
 export let game: Game;
+export let joystickManager: JoystickManager;
 
 export default function App() {
     const handlePressStart = () => {
@@ -29,6 +31,12 @@ export default function App() {
     const [gameInfo, setGameInfo] = useState<GameInfo>();
 
     useEffect(() => {
+        var joystickOptions: JoystickManagerOptions = {
+            zone: document.getElementById('game-container') as HTMLElement,
+            mode: 'semi',
+        };
+        joystickManager = nipplejs.create(joystickOptions);
+
         const playerCharacter = new Brawler(piper);
         const gameInfo: GameInfo = {
             gameMode: GameMode.KNOCKOUT,
@@ -50,7 +58,9 @@ export default function App() {
                 <div id="menu-container" className="absolute displayed w-full h-full">
                     <MainMenu gameInfo={gameInfo} handlePressStart={handlePressStart}/>
                 </div>
-                <canvas id="canvas" className="absolute"></canvas>
+                <div id="game-container" className="absolute undisplayed w-full h-full">
+                    <canvas id="canvas" className="absolute"></canvas>
+                </div>
             </div>
         </div>
     );
