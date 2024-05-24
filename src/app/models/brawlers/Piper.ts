@@ -29,7 +29,7 @@ export let piper: BrawlerProperties = {
         projectileDamage: 900,
         appliedEffects: [],
         appliedEffectDuration: 0,
-        attackShape: BrawlerAttackShape.CIRCLE,
+        attackShape: BrawlerAttackShape.RECTANGLE,
         attackRange: 10,
         attackWidth: 8.67,
         attackType: BrawlerAttackType.THROW,

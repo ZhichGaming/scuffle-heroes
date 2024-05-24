@@ -389,47 +389,6 @@ export default class Game {
                     character.aimAttackMesh = mesh;
                     this.scene.add(character.aimAttackMesh);
                 }
-                case BrawlerAttackShape.CIRCLE: {
-                    const attackRadius = character.brawlerProperties.attackProjectile.attackRange;
-                    const attackCenter = character.position;
-
-                    const circle = new THREE.CircleGeometry(attackRadius, 32);
-                    const material = new THREE.MeshBasicMaterial({ 
-                        opacity: 0.25, 
-                        transparent: true, 
-                        side: THREE.DoubleSide, 
-                        depthWrite: false,
-                        color: 0xffffff
-                    });
-                    const mesh = new THREE.Mesh(circle, material);
-
-                    mesh.position.copy(attackCenter);
-
-                    character.aimAttackMesh = mesh;
-                }
-                case BrawlerAttackShape.FAN: {
-                    const attackRadius = character.brawlerProperties.attackProjectile.attackRange;
-                    const attackWidth = character.brawlerProperties.attackProjectile.attackWidth;
-                    const attackCenter = character.position;
-
-                    const fan = new THREE.Shape();
-                    fan.moveTo(0, 0);
-                    fan.arc(0, 0, attackRadius, -attackWidth / 2, attackWidth / 2);
-
-                    const geometry = new THREE.ShapeGeometry(fan);
-                    const material = new THREE.MeshBasicMaterial({ 
-                        opacity: 0.25, 
-                        transparent: true, 
-                        side: THREE.DoubleSide, 
-                        depthWrite: false,
-                        color: 0xffffff
-                    });
-                    const mesh = new THREE.Mesh(geometry, material);
-
-                    mesh.position.copy(attackCenter);
-
-                    character.aimAttackMesh = mesh;
-                }
             }
         }
 

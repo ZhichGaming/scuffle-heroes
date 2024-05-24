@@ -24,8 +24,6 @@ export enum BrawlerEffect {
 
 export enum BrawlerAttackShape {
     RECTANGLE,
-    CIRCLE,
-    FAN,
 }
 
 export enum BrawlerAttackType {
