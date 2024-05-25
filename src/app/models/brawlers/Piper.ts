@@ -12,7 +12,7 @@ export let piper: BrawlerProperties = {
     attackName: "Gunbrella",
     attackProjectileCount: 1,
     attackProjectile: {
-        projectileDamage: 1700,
+        getProjectileDamage: (object) => 420 + (object.getDistanceTraveled() * 1.4),
         appliedEffects: [],
         appliedEffectDuration: 0,
         attackShape: BrawlerAttackShape.RECTANGLE,
@@ -20,13 +20,14 @@ export let piper: BrawlerProperties = {
         attackWidth: 0.67,
         attackType: BrawlerAttackType.NORMAL,
         superChargePerHit: 0.41225,
+        speed: 0.4,
     },
     reloadSpeed: 2.3,
 
     superName: "Poppin'",
     superProjectileCount: 4,
     superProjectile: {
-        projectileDamage: 900,
+        getProjectileDamage: () => 900,
         appliedEffects: [],
         appliedEffectDuration: 0,
         attackShape: BrawlerAttackShape.RECTANGLE,
@@ -34,6 +35,7 @@ export let piper: BrawlerProperties = {
         attackWidth: 8.67,
         attackType: BrawlerAttackType.THROW,
         superChargePerHit: 0.2025,
+        speed: 1,
     },
     models: {
         [BrawlerModelAnimation.IDLE]: undefined,

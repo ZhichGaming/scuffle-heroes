@@ -63,9 +63,11 @@ export type BrawlerProperties = {
 }
 
 export type BrawlerProjectileProperties = {
-    getProjectileDamage: () => number;
+    getProjectileDamage: (object: BrawlerProjectile) => number;
     appliedEffects: BrawlerEffect[];
     appliedEffectDuration: number;
+
+    speed: number;
 
     attackShape: BrawlerAttackShape;
     // If attackShape is RECTANGLE, this is the height of the rectangle. 
@@ -104,6 +106,22 @@ export default class Brawler extends GameObject {
 
         this.brawlerProperties = brawlerProperties;
     }
+
+    shootProjectile(angle: number, superShot: boolean = false): BrawlerProjectile {
+        const projectileProperties = superShot ? this.brawlerProperties.superProjectile : this.brawlerProperties.attackProjectile;
+
+        const projectile = new BrawlerProjectile(projectileProperties);
+        projectile.position.copy(this.position);
+        projectile.position.y = 0.5;
+        projectile.rotation.y = angle;
+        projectile.startPosition = this.position.clone();
+        projectile.parentBrawler = this;
+        projectile.velocity = new THREE.Vector3(Math.sin(angle + Math.PI / 2), 0, Math.cos(angle + Math.PI / 2)).normalize().multiplyScalar(projectileProperties.speed);
+
+        this.projectiles.push(projectile);
+
+        return projectile;
+    }
 }
 
 export class BrawlerProjectile extends GameObject {
@@ -117,5 +135,15 @@ export class BrawlerProjectile extends GameObject {
         super();
 
         this.brawlerProjectileProperties = brawlerProjectileProperties;
+
+        this.model = new THREE.Mesh(new THREE.IcosahedronGeometry(brawlerProjectileProperties.attackWidth / 1.5, 0), new THREE.MeshStandardMaterial({ color: 0x7FC8FF }));
+    }
+
+    getDistanceTraveled(): number {
+        if (!this.startPosition) {
+            return 0;
+        }
+
+        return this.position.distanceTo(this.startPosition);
     }
 }

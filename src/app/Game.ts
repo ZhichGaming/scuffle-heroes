@@ -424,7 +424,10 @@ export default class Game {
         character.aiming = false;
         if (character.aimAttackMesh !== undefined) character.aimAttackMesh.visible = false;
 
-        
+        if (this.latestJoystickData?.force ?? 0 > 0.3) {
+            const projectile = character.shootProjectile(this.latestJoystickData?.angle.radian ?? 0);
+            this.scene.add(projectile.model!);
+        }
     }
 
     private getUncollidingVelocity(brawler: Brawler, direction: THREE.Vector3): THREE.Vector3 {
@@ -521,8 +524,21 @@ export default class Game {
                 model.quaternion.slerp(quaternion, 0.2);
             }
 
-
             brawler.mixer?.update(delta);
+
+            // Update projectiles
+            for (const projectile of brawler.projectiles) {
+                projectile.update(delta);
+                projectile.model?.position.set(projectile.position.x, 0.5, projectile.position.z);
+                projectile.model?.rotation.set(0, projectile.rotation.y, 0);
+
+                projectile.rotation.y += 0.5;
+
+                if (projectile.getDistanceTraveled() > projectile.brawlerProjectileProperties.attackRange) {
+                    this.scene.remove(projectile.model!);
+                    brawler.projectiles.splice(brawler.projectiles.indexOf(projectile), 1);
+                }
+            }
         }
 
         // this.controls.update();
