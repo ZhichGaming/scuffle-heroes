@@ -423,6 +423,8 @@ export default class Game {
 
         character.aiming = false;
         if (character.aimAttackMesh !== undefined) character.aimAttackMesh.visible = false;
+
+        
     }
 
     private getUncollidingVelocity(brawler: Brawler, direction: THREE.Vector3): THREE.Vector3 {

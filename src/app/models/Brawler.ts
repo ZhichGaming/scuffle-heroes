@@ -49,12 +49,12 @@ export type BrawlerProperties = {
 
     attackName: string;
     attackProjectileCount: number;
-    attackProjectile: BrawlerAttackProperties;
+    attackProjectile: BrawlerProjectileProperties;
     reloadSpeed: number;
 
     superName: string;
     superProjectileCount: number;
-    superProjectile: BrawlerAttackProperties;
+    superProjectile: BrawlerProjectileProperties;
 
     // Path to the model file.
     // modelsProperties: { [key in BrawlerModelAnimation]: string | undefined };
@@ -62,8 +62,8 @@ export type BrawlerProperties = {
     modelsAnimations: { [key in BrawlerModelAnimation]: THREE.AnimationClip | undefined };
 }
 
-export type BrawlerAttackProperties = {
-    projectileDamage: number;
+export type BrawlerProjectileProperties = {
+    getProjectileDamage: () => number;
     appliedEffects: BrawlerEffect[];
     appliedEffectDuration: number;
 
@@ -95,11 +95,27 @@ export default class Brawler extends GameObject {
     aimingSuper: boolean = false;
     aimSuperMesh?: THREE.Mesh;
 
+    projectiles: BrawlerProjectile[] = [];
+
     id = Math.random().toString(36).substring(7);
 
     constructor(brawlerProperties: BrawlerProperties) {
         super();
 
         this.brawlerProperties = brawlerProperties;
+    }
+}
+
+export class BrawlerProjectile extends GameObject {
+    brawlerProjectileProperties: BrawlerProjectileProperties;
+
+    parentBrawler?: Brawler;
+
+    startPosition?: THREE.Vector3;
+
+    constructor(brawlerProjectileProperties: BrawlerProjectileProperties) {
+        super();
+
+        this.brawlerProjectileProperties = brawlerProjectileProperties;
     }
 }
