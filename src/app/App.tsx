@@ -30,6 +30,7 @@ export default function App() {
     }
 
     const [gameInfo, setGameInfo] = useState<GameInfo>();
+    const [playerBrawler, setPlayerBrawler] = useState<Brawler>();
 
     useEffect(() => {
         var joystickOptions: JoystickManagerOptions = {
@@ -39,11 +40,14 @@ export default function App() {
         joystickManager = nipplejs.create(joystickOptions);
 
         const playerCharacter = new Brawler(piper);
+        const random1 = new Brawler(piper);
+        setPlayerBrawler(playerCharacter);
+
         const gameInfo: GameInfo = {
             gameMode: GameMode.KNOCKOUT,
             map: maps[1],
             playerID: playerCharacter.id,
-            brawlers: [playerCharacter],
+            brawlers: [playerCharacter, random1],
             duration: 120,
             respawnDuration: 5,
         }
@@ -65,7 +69,7 @@ export default function App() {
                 <div id='infobars' className='hidden'>
                     {
                         gameInfo?.brawlers.map((brawler) => (
-                            <InfoBar brawler={brawler}/>
+                            <InfoBar brawler={brawler} isEnemy={brawler.team !== playerBrawler?.team} isPlayer={brawler.id === playerBrawler?.id}/>
                         ))
                     }
                 </div>

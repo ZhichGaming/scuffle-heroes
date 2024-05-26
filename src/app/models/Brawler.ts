@@ -123,6 +123,18 @@ export default class Brawler extends GameObject {
 
         return projectile;
     }
+
+    setBrawlerHealth(health: number) {
+        this.health = Math.max(health, 0);
+
+        if (this.infoBarUI) {
+            const healthElement = this.infoBarUI.element.getElementsByClassName("health")[0];
+            healthElement.innerHTML = this.health.toFixed();
+            
+            const healthbarElement = this.infoBarUI.element.getElementsByClassName("healthbar")[0] as HTMLElement;
+            healthbarElement.style.width = (this.health / this.brawlerProperties.maxHealth * 100).toString() + "%";
+        }
+    }
 }
 
 export class BrawlerProjectile extends GameObject {

@@ -581,17 +581,25 @@ export default class Game {
 
                 projectile.rotation.y += 0.5;
 
-                const collidingObstacle = this.checkObstacleCollision(projectile.model!, projectile.velocity);
-                const collidingBrawler = this.checkBrawlerCollision(projectile.model!, projectile.velocity);
+                const collidingObstacles = this.checkObstacleCollision(projectile.model!, projectile.velocity);
+                const collidingBrawlers = this.checkBrawlerCollision(projectile.model!, projectile.velocity);
 
-                if (collidingBrawler) {
-                    for (const brawler of collidingBrawler) {
+                const collidingEnemyBrawlers = collidingBrawlers.filter((b) => b.team !== brawler.team);
+
+                if (collidingEnemyBrawlers.length > 0) {
+                    for (const brawler of collidingBrawlers) {
                         const damage = projectile.brawlerProjectileProperties.getProjectileDamage(projectile);
-                        brawler.health -= damage;
+                        brawler.setBrawlerHealth(brawler.health - damage);
+
+                        if (brawler.health <= 0) {
+                            this.scene.remove(brawler.model!);
+                            this.scene.remove(brawler.infoBarUI!);
+                            this.currentGame?.brawlers.splice(this.currentGame?.brawlers.indexOf(brawler), 1);
+                        }
                     }
                 }
 
-                if (projectile.getDistanceTraveled() > projectile.brawlerProjectileProperties.attackRange || collidingObstacle.length > 0 || collidingBrawler.length > 0) {
+                if (projectile.getDistanceTraveled() > projectile.brawlerProjectileProperties.attackRange || collidingObstacles.length > 0 || collidingEnemyBrawlers.length > 0) {
                     this.scene.remove(projectile.model!);
                     brawler.projectiles.splice(brawler.projectiles.indexOf(projectile), 1);
                 }
