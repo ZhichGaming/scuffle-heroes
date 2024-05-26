@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, ShaderPass, RoomEnvironment, CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/Addons.js';
+import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, ShaderPass, RoomEnvironment, CSS2DObject, CSS2DRenderer, SkeletonUtils } from 'three/examples/jsm/Addons.js';
 import { fragmentShader } from './shaders/FragmentShader';
 import { vertexShader } from './shaders/VertexShader';
 import { GameInfo } from './models/GameInfo';
@@ -348,7 +348,13 @@ export default class Game {
         const oldModel = brawler.model;
         if (oldModel) this.scene.remove(oldModel);
 
-        brawler.model = brawlers[brawler.brawlerProperties.brawlerType].models[animation];
+        const newModel = brawlers[brawler.brawlerProperties.brawlerType].models[animation];
+
+        if (newModel === undefined) return;
+
+        const newClonedModel = SkeletonUtils.clone(newModel);
+
+        brawler.model = newClonedModel;
         brawler.model?.position.set(brawler.position.x, 0, brawler.position.z);
         brawler.model?.rotation.copy(oldModel?.rotation ?? new THREE.Euler(0, 0, 0));
 
