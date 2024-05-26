@@ -8,7 +8,7 @@ import { GameMap } from './models/GameMap';
 import Brawler, { BrawlerAttackShape, BrawlerModelAnimation, BrawlerProperties, BrawlerType } from './models/Brawler';
 import { starrpark } from './models/maps/starrpark';
 import getMiddlePoint from './utils/getMiddlePoint';
-import { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from './models/GameObstacle';
+import GameObstacle, { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from './models/GameObstacle';
 import { bush } from './models/obstacles/bush';
 import { wBox } from './models/obstacles/woodenBox';
 import { wBar } from './models/obstacles/woodenBarrel';
@@ -430,13 +430,13 @@ export default class Game {
         }
     }
 
-    private getUncollidingVelocity(brawler: Brawler, direction: THREE.Vector3): THREE.Vector3 {
-        const boundingBox = new THREE.Box3().setFromObject(brawler.model!);
-        const brawlerSize = boundingBox.getSize(new THREE.Vector3());
+    private checkObstacleCollision(object: THREE.Object3D, direction: THREE.Vector3): GameObstacle[] {
+        const boundingBox = new THREE.Box3().setFromObject(object);
+        const objectSize = boundingBox.getSize(new THREE.Vector3());
 
-        const newPosition = brawler.model!.position.clone().add(direction);
+        const newPosition = object.position.clone().add(direction);
 
-        const finalDirection = direction.clone();
+        const collidingObstacles: GameObstacle[] = [];
 
         for (const obstacle of this.currentGame?.map.gameObstacles ?? []) {
             if (obstacle.getObstacleProperties().collision === false) continue;
@@ -445,18 +445,42 @@ export default class Game {
             const obstacleBoundingBox = new THREE.Box3().setFromObject(obstacle.model);
             const obstacleSize = obstacleBoundingBox.getSize(new THREE.Vector3());
 
-            if (newPosition.x < obstacle.model.position.x + obstacleSize.x &&
-                newPosition.x + brawlerSize.x > obstacle.model.position.x &&
-                newPosition.z < obstacle.model.position.z + obstacleSize.z &&
-                newPosition.z + brawlerSize.z > obstacle.model.position.z) {
-                
-                // Collision
-                finalDirection.x = 0;
-                finalDirection.z = 0;
+            if (this.checkColliding(newPosition, obstacle.model.position, objectSize, obstacleSize)) {
+                collidingObstacles.push(obstacle);
             }
         }
 
-        return finalDirection;
+        return collidingObstacles;
+    }
+
+    private checkBrawlerCollision(object: THREE.Object3D, direction: THREE.Vector3): Brawler[] {
+        const boundingBox = new THREE.Box3().setFromObject(object);
+        const objectSize = boundingBox.getSize(new THREE.Vector3());
+
+        const newPosition = object.position.clone().add(direction);
+
+        const collidingBrawlers: Brawler[] = [];
+
+        for (const brawler of this.currentGame?.brawlers ?? []) {
+            if (brawler.model === undefined) continue;
+            if (brawler.id === this.currentGame?.playerID) continue;
+
+            const brawlerBoundingBox = new THREE.Box3().setFromObject(brawler.model);
+            const brawlerSize = brawlerBoundingBox.getSize(new THREE.Vector3());
+
+            if (this.checkColliding(newPosition, brawler.model.position, objectSize, brawlerSize)) {
+                collidingBrawlers.push(brawler);
+            }
+        }
+
+        return collidingBrawlers;
+    }
+
+    private checkColliding(position1: THREE.Vector3, position2: THREE.Vector3, size1: THREE.Vector3, size2: THREE.Vector3): boolean {
+        return (position1.x < position2.x + size2.x &&
+            position1.x + size1.x > position2.x &&
+            position1.z < position2.z + size2.z &&
+            position1.z + size1.z > position2.z)
     }
 
     private animate() {
@@ -485,10 +509,9 @@ export default class Game {
             movementVector.normalize();
             movementVector.multiplyScalar(speed);
 
-            character.velocity = this.getUncollidingVelocity(character, movementVector);
+            if (character.model) character.velocity = this.checkObstacleCollision(character.model, movementVector).length > 0 ? new THREE.Vector3() : movementVector;
 
             character.update(delta);
-
 
             const newCameraTarget = new THREE.Vector3(getMiddlePoint(this.currentGame!.map).x, getMiddlePoint(this.currentGame!.map).y, character.position.z);
             this.camera.position.setZ(character.position.z + 50)
@@ -534,7 +557,17 @@ export default class Game {
 
                 projectile.rotation.y += 0.5;
 
-                if (projectile.getDistanceTraveled() > projectile.brawlerProjectileProperties.attackRange) {
+                const collidingObstacle = this.checkObstacleCollision(projectile.model!, projectile.velocity);
+                const collidingBrawler = this.checkBrawlerCollision(projectile.model!, projectile.velocity);
+
+                if (collidingBrawler) {
+                    for (const brawler of collidingBrawler) {
+                        const damage = projectile.brawlerProjectileProperties.getProjectileDamage(projectile);
+                        brawler.health -= damage;
+                    }
+                }
+
+                if (projectile.getDistanceTraveled() > projectile.brawlerProjectileProperties.attackRange || collidingObstacle.length > 0 || collidingBrawler.length > 0) {
                     this.scene.remove(projectile.model!);
                     brawler.projectiles.splice(brawler.projectiles.indexOf(projectile), 1);
                 }
