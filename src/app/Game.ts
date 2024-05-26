@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, ShaderPass, RoomEnvironment } from 'three/examples/jsm/Addons.js';
+import { EffectComposer, RenderPass, OutputPass, GLTFLoader, OrbitControls, UnrealBloomPass, ShaderPass, RoomEnvironment, CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/Addons.js';
 import { fragmentShader } from './shaders/FragmentShader';
 import { vertexShader } from './shaders/VertexShader';
 import { GameInfo } from './models/GameInfo';
@@ -53,6 +53,7 @@ export default class Game {
     private outputPass: OutputPass
     private gltfLoader: GLTFLoader;
     private textureLoader: THREE.TextureLoader;
+    private labelRenderer: CSS2DRenderer;
     // private controls: OrbitControls;
     private clock: THREE.Clock;
     private frameCount = 0;
@@ -150,6 +151,13 @@ export default class Game {
 
         this.camera.position.z = 5;
 
+        this.labelRenderer = new CSS2DRenderer();
+        this.labelRenderer.setSize (window. innerWidth, window.innerHeight);
+        this.labelRenderer.domElement.style.position = 'absolute';
+        this.labelRenderer.domElement.style.top = '0px';
+        this.labelRenderer.domElement.style.pointerEvents = 'none';
+        document.getElementById("game-container")!.appendChild(this.labelRenderer.domElement);
+
         // const path = "/brawlers/piper/piper_idle.gltf";
         // this.gltfLoader.load(path, (collada) => {
         //     const model = collada.scene;
@@ -171,6 +179,7 @@ export default class Game {
             canvas.height = window.innerHeight;
 
             this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
         });
@@ -257,6 +266,15 @@ export default class Game {
 
             brawler.state = BrawlerModelAnimation.IDLE;
             this.setModel(brawler, BrawlerModelAnimation.IDLE);
+
+            const infoBarHTML = document.getElementById(`infobar-${brawler.id}`);
+
+            if (infoBarHTML) {
+                const infoBar = new CSS2DObject(infoBarHTML);
+                this.scene.add(infoBar);
+
+                brawler.infoBarUI = infoBar;            
+            }
         }
     }
 
@@ -489,7 +507,7 @@ export default class Game {
         const character = this.currentGame?.brawlers.find((brawler) => brawler.id === this.currentGame?.playerID);
 
         if (character !== undefined) {
-            const speed = character.brawlerProperties.speed * delta * 60 / 30;
+            const speed = character.brawlerProperties.speed * delta * 60 / 50;
 
             const movementVector = new THREE.Vector3();
 
@@ -572,6 +590,8 @@ export default class Game {
                     brawler.projectiles.splice(brawler.projectiles.indexOf(projectile), 1);
                 }
             }
+
+            brawler.infoBarUI?.position.set(brawler.position.x, 3, brawler.position.z);
         }
 
         // this.controls.update();
@@ -580,6 +600,8 @@ export default class Game {
         this.bloomComposer.render();
         this.scene.traverse(this.restoreMaterial.bind(this));
         this.finalComposer.render();
+
+        this.labelRenderer.render(this.scene, this.camera);
 
         this.frameCount++;
 

@@ -9,8 +9,8 @@ export default function MainMenu({ gameInfo, handlePressStart }: { gameInfo: Gam
         handlePressStart();
 
         setTimeout(() => {
-            document.getElementById('canvas')?.classList.add('displayed');
-            document.getElementById('canvas')?.classList.remove('undisplayed');
+            document.getElementById('game-container')?.classList.add('displayed');
+            document.getElementById('game-container')?.classList.remove('undisplayed');
             document.getElementById('menu-container')?.classList.add('undisplayed');
             document.getElementById('menu-container')?.classList.remove('displayed');
         }, 1500)

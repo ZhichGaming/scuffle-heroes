@@ -10,6 +10,7 @@ import { piper } from "./models/brawlers/Piper";
 import MainMenu from "./MainMenu";
 import "./transition.css";
 import nipplejs, { JoystickManager, JoystickManagerOptions } from 'nipplejs';
+import InfoBar from "./InfoBar";
 
 export let game: Game;
 export let joystickManager: JoystickManager;
@@ -60,6 +61,13 @@ export default function App() {
                 </div>
                 <div id="game-container" className="absolute undisplayed w-full h-full">
                     <canvas id="canvas" className="absolute"></canvas>
+                </div>
+                <div id='infobars' className='hidden'>
+                    {
+                        gameInfo?.brawlers.map((brawler) => (
+                            <InfoBar brawler={brawler}/>
+                        ))
+                    }
                 </div>
             </div>
         </div>

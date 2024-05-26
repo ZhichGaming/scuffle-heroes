@@ -1,3 +1,4 @@
+import { CSS2DObject } from "three/examples/jsm/Addons.js";
 import GameObject from "./GameObject";
 import * as THREE from "three";
 
@@ -88,23 +89,23 @@ export default class Brawler extends GameObject {
     brawlerProperties: BrawlerProperties;
     
     team: number = 0;
-
+    id = Math.random().toString(36).substring(7);
     state: BrawlerModelAnimation = BrawlerModelAnimation.IDLE;
     
     aiming: boolean = false;
     aimAttackMesh?: THREE.Mesh;
-
     aimingSuper: boolean = false;
     aimSuperMesh?: THREE.Mesh;
 
     projectiles: BrawlerProjectile[] = [];
 
-    id = Math.random().toString(36).substring(7);
+    infoBarUI?: CSS2DObject;
 
     constructor(brawlerProperties: BrawlerProperties) {
         super();
 
         this.brawlerProperties = brawlerProperties;
+        this.health = brawlerProperties.maxHealth;
     }
 
     shootProjectile(angle: number, superShot: boolean = false): BrawlerProjectile {
