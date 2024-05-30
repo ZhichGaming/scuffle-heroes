@@ -1,27 +1,11 @@
 import React from 'react';
-import { GameInfo, gameModeDescriptions } from './models/GameInfo';
+import { GameInfo, GameMode, gameModeDescriptions } from './models/GameInfo';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css'
+import Player, { PlayerState } from './models/Player';
+import { GameMap } from './models/GameMap';
 
-export default function MainMenu({ gameInfo, handlePressStart }: { gameInfo: GameInfo | undefined, handlePressStart: () => void }) {
-    const onPressStart = () => {
-        console.log('Pressed start');
-        handlePressStart();
-
-        setTimeout(() => {
-            document.getElementById('game-container')?.classList.add('displayed');
-            document.getElementById('game-container')?.classList.remove('undisplayed');
-            document.getElementById('menu-container')?.classList.add('undisplayed');
-            document.getElementById('menu-container')?.classList.remove('displayed');
-        }, 1500)
-
-        const appContainer = document.getElementById('app-container');
-        appContainer?.classList.add('animate_tv');
-
-        setTimeout(() => {
-            appContainer?.classList.remove('animate_tv');
-        }, 3200);
-    }
+export default function MainMenu({ gameMode, gameMap, handlePressStart, player }: { gameMode: GameMode | undefined, gameMap: GameMap | undefined, handlePressStart: () => void, player: Player | undefined }) {
 
     return (
         <div className='bg-[url("/Regular.webp")] h-full w-full bg-cover flex flex-col'>
@@ -34,13 +18,13 @@ export default function MainMenu({ gameInfo, handlePressStart }: { gameInfo: Gam
                 <p>To be added.</p>
             </div>
             <div className='flex justify-center items-center space-x-6 mb-10'>
-                <button className={`bg-gray-700 w-80 h-20 rounded-md text-white border-black border shadow-md bg-cover bg-center`} style={{ backgroundImage: `linear-gradient(rgba(55, 65, 81, 0.5), rgba(55, 65, 81, 0.9)), url("/banners/${gameInfo?.map.bannerImageFileName || ''}")` }}>
-                    <span className='text-lg font-bold'>{gameInfo?.gameMode || <Skeleton width={100} containerClassName="flex-1"/>}</span>
-                    {gameInfo?.gameMode && <br/>}
-                    <span className='text-sm text-gray-300'>{gameInfo?.gameMode && gameModeDescriptions[gameInfo.gameMode] || <Skeleton width={300} containerClassName="flex-1"/>}</span>
+                <button className={`bg-gray-700 w-80 h-20 rounded-md text-white border-black border shadow-md bg-cover bg-center`} style={{ backgroundImage: `linear-gradient(rgba(55, 65, 81, 0.5), rgba(55, 65, 81, 0.9)), url("/banners/${gameMap?.bannerImageFileName || ''}")` }}>
+                    <span className='text-lg font-bold'>{gameMode || <Skeleton width={100} containerClassName="flex-1"/>}</span>
+                    {gameMode && <br/>}
+                    <span className='text-sm text-gray-300'>{gameMode && gameModeDescriptions[gameMode] || <Skeleton width={300} containerClassName="flex-1"/>}</span>
                 </button>
-                <button className='bg-yellow-500 w-64 h-20 rounded-md font-bold text-white text-3xl border-black border shadow-md' onClick={onPressStart}>
-                    <span className='font-outline-1'>PLAY</span>
+                <button className='w-64 h-20 rounded-md font-bold text-white text-3xl border-black border shadow-md' style={{ backgroundColor: player?.playerState === PlayerState.MATCHMAKING ? "rgb(239, 68, 68)" : "rgb(234, 179, 8)" }} onClick={handlePressStart}>
+                    <span className='font-outline-1'>{ player?.playerState === PlayerState.MATCHMAKING ? "CANCEL" : "PLAY" }</span>
                 </button>
             </div>
         </div>

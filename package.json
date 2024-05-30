@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "firebase": "^10.12.1",
     "i18next": "^23.11.2",
     "i18next-http-backend": "^2.5.1",
     "next": "14.2.2",

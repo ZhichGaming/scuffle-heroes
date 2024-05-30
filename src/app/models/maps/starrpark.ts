@@ -47,7 +47,7 @@ export const starrpark: GameMap = {
     gameEntities: [],
     
     backgroundObjectPath: "maps/environment-training-cave/scene.gltf",
-    backgroundObject: undefined,
+    backgroundObject: null,
 
     bannerImageFileName: "banner_map_8b.png",
 

@@ -1,6 +1,8 @@
 import { CSS2DObject } from "three/examples/jsm/Addons.js";
 import GameObject from "./GameObject";
 import * as THREE from "three";
+import { brawlers } from "../Game";
+import { DatabaseReference, set, update } from "firebase/database";
 
 export enum BrawlerType {
     PIPER
@@ -86,10 +88,10 @@ export type BrawlerProjectileProperties = {
 }
 
 export default class Brawler extends GameObject {
-    brawlerProperties: BrawlerProperties;
+    brawlerType: BrawlerType;
     
     team: number = 0;
-    id = Math.random().toString(36).substring(7);
+    id?: string;
     state: BrawlerModelAnimation = BrawlerModelAnimation.IDLE;
     
     aiming: boolean = false;
@@ -101,17 +103,21 @@ export default class Brawler extends GameObject {
 
     infoBarUI?: CSS2DObject;
 
-    constructor(brawlerProperties: BrawlerProperties) {
+    constructor(brawlerPropertiesID: BrawlerType) {
         super();
 
-        this.brawlerProperties = brawlerProperties;
-        this.health = brawlerProperties.maxHealth;
+        this.brawlerType = brawlerPropertiesID;
+        this.health = this.getbrawlerProperties().maxHealth;
+    }
+
+    getbrawlerProperties(): BrawlerProperties {
+        return brawlers[this.brawlerType];
     }
 
     shootProjectile(angle: number, superShot: boolean = false): BrawlerProjectile {
-        const projectileProperties = superShot ? this.brawlerProperties.superProjectile : this.brawlerProperties.attackProjectile;
+        const projectileProperties = superShot ? this.getbrawlerProperties().superProjectile : this.getbrawlerProperties().attackProjectile;
 
-        const projectile = new BrawlerProjectile(projectileProperties);
+        const projectile = new BrawlerProjectile(this.brawlerType, superShot);
         projectile.position.copy(this.position);
         projectile.position.y = 0.5;
         projectile.rotation.y = angle;
@@ -132,24 +138,52 @@ export default class Brawler extends GameObject {
             healthElement.innerHTML = this.health.toFixed();
             
             const healthbarElement = this.infoBarUI.element.getElementsByClassName("healthbar")[0] as HTMLElement;
-            healthbarElement.style.width = (this.health / this.brawlerProperties.maxHealth * 100).toString() + "%";
+            healthbarElement.style.width = (this.health / this.getbrawlerProperties().maxHealth * 100).toString() + "%";
         }
+    }
+
+    sendBrawlerData(ref: DatabaseReference) {
+        const uploadBrawler = { ...this };
+
+        delete uploadBrawler.model;
+        delete uploadBrawler.mixer;
+        delete uploadBrawler.infoBarUI;
+        delete uploadBrawler.aimAttackMesh;
+        delete uploadBrawler.aimSuperMesh;
+
+        uploadBrawler.projectiles = this.projectiles.map((p) => {
+            const uploadProjectile = { ...p } as BrawlerProjectile;
+
+            delete uploadProjectile.model;
+            delete uploadProjectile.parentBrawler;
+
+            return uploadProjectile;
+        });
+
+        update(ref, uploadBrawler);
     }
 }
 
 export class BrawlerProjectile extends GameObject {
-    brawlerProjectileProperties: BrawlerProjectileProperties;
+    brawlerPropertiesType: BrawlerType;
+    isSuper: boolean = false;
 
+    id: string = Math.random().toString(36).substring(7);
     parentBrawler?: Brawler;
 
     startPosition?: THREE.Vector3;
 
-    constructor(brawlerProjectileProperties: BrawlerProjectileProperties) {
+    constructor(brawlerPropertiesType: BrawlerType, isSuper: boolean = false) {
         super();
 
-        this.brawlerProjectileProperties = brawlerProjectileProperties;
+        this.brawlerPropertiesType = brawlerPropertiesType;
+        this.isSuper = isSuper;
 
-        this.model = new THREE.Mesh(new THREE.IcosahedronGeometry(brawlerProjectileProperties.attackWidth / 1.5, 0), new THREE.MeshStandardMaterial({ color: 0x7FC8FF }));
+        this.model = new THREE.Mesh(new THREE.IcosahedronGeometry(this.getBrawlerProjectileProperties().attackWidth / 1.5, 0), new THREE.MeshStandardMaterial({ color: 0x7FC8FF }));
+    }
+
+    getBrawlerProjectileProperties(): BrawlerProjectileProperties {
+        return this.isSuper ? brawlers[this.brawlerPropertiesType].superProjectile : brawlers[this.brawlerPropertiesType].attackProjectile;
     }
 
     getDistanceTraveled(): number {

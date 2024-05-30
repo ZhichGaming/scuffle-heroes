@@ -5,7 +5,7 @@ import { vertexShader } from './shaders/VertexShader';
 import { GameInfo } from './models/GameInfo';
 import { minicity } from './models/maps/minicity';
 import { GameMap } from './models/GameMap';
-import Brawler, { BrawlerAttackShape, BrawlerModelAnimation, BrawlerProperties, BrawlerType } from './models/Brawler';
+import Brawler, { BrawlerAttackShape, BrawlerModelAnimation, BrawlerProjectile, BrawlerProperties, BrawlerType } from './models/Brawler';
 import { starrpark } from './models/maps/starrpark';
 import getMiddlePoint from './utils/getMiddlePoint';
 import GameObstacle, { GameObstacleBiome, GameObstacleProperties, GameObstacleType } from './models/GameObstacle';
@@ -21,7 +21,7 @@ import getValues from './utils/getValues';
 import { Controller } from './Controller';
 import { joystickManager } from './App';
 import { EventData, JoystickOutputData } from 'nipplejs';
-import { cos } from 'three/examples/jsm/nodes/Nodes.js';
+import { DatabaseReference, getDatabase, onValue, ref, set } from "firebase/database";
 
 export const brawlers: { [key in BrawlerType]: BrawlerProperties } = {
     [BrawlerType.PIPER]: piper
@@ -70,10 +70,13 @@ export default class Game {
 
     stopped = false;
     private handleEnd: () => void;
+    brawlersRef?: DatabaseReference;
+    brawlerRef?: DatabaseReference;
 
     private controller: Controller;
 
     currentGame?: GameInfo;
+    playerID?: string;
 
     constructor(handleEnd: () => void) {
         this.scene = new THREE.Scene();
@@ -152,7 +155,7 @@ export default class Game {
         this.camera.position.z = 5;
 
         this.labelRenderer = new CSS2DRenderer();
-        this.labelRenderer.setSize (window. innerWidth, window.innerHeight);
+        this.labelRenderer.setSize (window.innerWidth, window.innerHeight);
         this.labelRenderer.domElement.style.position = 'absolute';
         this.labelRenderer.domElement.style.top = '0px';
         this.labelRenderer.domElement.style.pointerEvents = 'none';
@@ -197,8 +200,68 @@ export default class Game {
         this.stopped = true;
     }
 
-    public loadGame(game: GameInfo) {
+    public loadGame(game: GameInfo, playerID?: string) {
         this.currentGame = game;
+        this.playerID = playerID;
+
+        this.brawlersRef = ref(getDatabase(), 'games/' + this.currentGame?.id + '/brawlers');
+        this.brawlerRef = ref(getDatabase(), 'games/' + this.currentGame?.id + '/brawlers/' + this.playerID);
+
+        onValue(this.brawlersRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data === null) return;
+
+            for (const key in data) {
+                if (key === this.playerID) continue;
+
+                const brawler: Brawler = data[key];
+                const brawlerInstance = this.currentGame?.brawlers.find((b) => b.id === key);
+
+                if (brawlerInstance === undefined) continue;
+                
+                brawlerInstance?.setBrawlerHealth(brawler.health);
+                
+                brawlerInstance?.position.set(brawler.position.x, brawler.position.y, brawler.position.z);
+                brawlerInstance?.velocity.set(brawler.velocity.x, brawler.velocity.y, brawler.velocity.z);
+                brawlerInstance?.acceleration.set(brawler.acceleration.x, brawler.acceleration.y, brawler.acceleration.z);
+                brawlerInstance?.rotation.set(brawler.rotation.x, brawler.rotation.y, brawler.rotation.z, brawler.rotation.w);
+
+                brawlerInstance.aiming = brawler.aiming;
+                brawlerInstance.aimingSuper = brawler.aimingSuper;
+                
+                // remove projectiles that are not in the data
+                for (const projectile of brawlerInstance.projectiles) {
+                    if (brawler.projectiles?.find((p) => p.id === projectile.id) === undefined) {
+                        this.scene.remove(projectile.model!);
+                        brawlerInstance.projectiles.splice(brawlerInstance.projectiles.indexOf(projectile), 1);
+                    }
+                }
+
+                brawlerInstance.projectiles = brawler.projectiles?.map((p: any) => {
+                    let currentProjectile = brawlerInstance.projectiles.find((proj) => proj.id === p.id);
+
+                    if (currentProjectile === undefined) {
+                        currentProjectile = new BrawlerProjectile(brawler.brawlerType, false)
+                        currentProjectile.id = p.id;
+
+                        this.scene.add(currentProjectile.model!);
+                    }
+                    
+                    currentProjectile.position = new THREE.Vector3().add(p.position);
+                    currentProjectile.velocity = new THREE.Vector3().add(p.velocity);
+                    currentProjectile.acceleration = new THREE.Vector3().add(p.acceleration);
+                    currentProjectile.rotation = new THREE.Quaternion().copy(p.rotation);
+                    currentProjectile.startPosition = new THREE.Vector3().add(p.startPosition);
+                    currentProjectile.parentBrawler = p.parentBrawler;
+
+                    currentProjectile.model!.position.set(currentProjectile.position.x, 0.5, currentProjectile.position.z);
+                    currentProjectile.model!.rotation.set(0, currentProjectile.rotation.y, 0);
+
+                    return currentProjectile;
+                }) ?? [];
+                // console.log(brawlerInstance.projectiles);
+            }
+        });
 
         this.gltfLoader.load(game.map.backgroundObjectPath, (gltf) => {
             gltf.scene.position.set(0, 0, 0);
@@ -252,8 +315,7 @@ export default class Game {
 
         for (const brawler of game.brawlers) {
             for (const key in BrawlerModelAnimation) {
-                const model = brawlers[brawler.brawlerProperties.brawlerType].models[key.toLowerCase() as BrawlerModelAnimation];
-                // const model = brawlers[brawler.brawlerProperties.brawlerType].models[BrawlerModelAnimation.IDLE]?.clone();
+                const model = brawlers[brawler.brawlerType].models[key.toLowerCase() as BrawlerModelAnimation];
 
                 if (model === undefined) {
                     console.error("Model is undefined");
@@ -348,7 +410,7 @@ export default class Game {
         const oldModel = brawler.model;
         if (oldModel) this.scene.remove(oldModel);
 
-        const newModel = brawlers[brawler.brawlerProperties.brawlerType].models[animation];
+        const newModel = brawlers[brawler.brawlerType].models[animation];
 
         if (newModel === undefined) return;
 
@@ -359,7 +421,7 @@ export default class Game {
         brawler.model?.rotation.copy(oldModel?.rotation ?? new THREE.Euler(0, 0, 0));
 
         brawler.mixer = new THREE.AnimationMixer(brawler.model!);
-        brawler.mixer.clipAction(brawler.brawlerProperties.modelsAnimations[animation]!).play();
+        brawler.mixer.clipAction(brawlers[brawler.brawlerType].modelsAnimations[animation]!).play();
 
         this.scene.add(brawler.model!);
     }
@@ -385,16 +447,16 @@ export default class Game {
         
         if (this.currentGame === undefined) return;
 
-        const character = this.currentGame.brawlers.find((brawler) => brawler.id === this.currentGame?.playerID);
+        const character = this.currentGame.brawlers.find((brawler) => brawler.id === this.playerID);
 
         if (character === undefined) return;
 
         if (character.aimAttackMesh === undefined) {
             // Draw a rectangle, circle, or fan from the brawler to the vector.
-            switch (character.brawlerProperties.attackProjectile.attackShape) {
+            switch (character.getbrawlerProperties().attackProjectile.attackShape) {
                 case BrawlerAttackShape.RECTANGLE: {
-                    const attackWidth = character.brawlerProperties.attackProjectile.attackWidth;
-                    const attackHeight = character.brawlerProperties.attackProjectile.attackRange;
+                    const attackWidth = character.getbrawlerProperties().attackProjectile.attackWidth;
+                    const attackHeight = character.getbrawlerProperties().attackProjectile.attackRange;
                     const attackCenter = character.position;
 
                     const plane = new THREE.PlaneGeometry(attackWidth, attackHeight);
@@ -432,8 +494,8 @@ export default class Game {
 
         character.aimAttackMesh.position.copy(character.position);
         character.aimAttackMesh.position.y = 0.1;
-        character.aimAttackMesh.position.x += character.brawlerProperties.attackProjectile.attackRange / 2 * Math.sin(data.angle.radian + Math.PI / 2);
-        character.aimAttackMesh.position.z += character.brawlerProperties.attackProjectile.attackRange / 2 * Math.cos(data.angle.radian + Math.PI / 2);
+        character.aimAttackMesh.position.x += character.getbrawlerProperties().attackProjectile.attackRange / 2 * Math.sin(data.angle.radian + Math.PI / 2);
+        character.aimAttackMesh.position.z += character.getbrawlerProperties().attackProjectile.attackRange / 2 * Math.cos(data.angle.radian + Math.PI / 2);
 
         character.aimAttackMesh.rotation.z = -data.angle.radian + Math.PI / 2;
     }
@@ -441,7 +503,7 @@ export default class Game {
     private onJoystickRelease() {
         if (this.currentGame === undefined) return;
 
-        const character = this.currentGame.brawlers.find((brawler) => brawler.id === this.currentGame?.playerID);
+        const character = this.currentGame.brawlers.find((brawler) => brawler.id === this.playerID);
 
         if (character === undefined) return;
 
@@ -450,7 +512,12 @@ export default class Game {
 
         if (this.latestJoystickData?.force ?? 0 > 0.3) {
             const projectile = character.shootProjectile(this.latestJoystickData?.angle.radian ?? 0);
+
             this.scene.add(projectile.model!);
+
+            if (this.brawlerRef) {
+                character.sendBrawlerData(this.brawlerRef);
+            }
         }
     }
 
@@ -463,7 +530,7 @@ export default class Game {
         const collidingObstacles: GameObstacle[] = [];
 
         for (const obstacle of this.currentGame?.map.gameObstacles ?? []) {
-            if (obstacle.getObstacleProperties().collision === false) continue;
+            if (obstacles[obstacle.obstacleType].collision === false) continue;
             if (obstacle.model === undefined) continue;
 
             const obstacleBoundingBox = new THREE.Box3().setFromObject(obstacle.model);
@@ -487,7 +554,7 @@ export default class Game {
 
         for (const brawler of this.currentGame?.brawlers ?? []) {
             if (brawler.model === undefined) continue;
-            if (brawler.id === this.currentGame?.playerID) continue;
+            if (brawler.id === this.playerID) continue;
 
             const brawlerBoundingBox = new THREE.Box3().setFromObject(brawler.model);
             const brawlerSize = brawlerBoundingBox.getSize(new THREE.Vector3());
@@ -510,10 +577,10 @@ export default class Game {
     private animate() {
         const delta = this.clock.getDelta()
 
-        const character = this.currentGame?.brawlers.find((brawler) => brawler.id === this.currentGame?.playerID);
+        const character = this.currentGame?.brawlers.find((brawler) => brawler.id === this.playerID);
 
         if (character !== undefined) {
-            const speed = character.brawlerProperties.speed * delta * 60 / 50;
+            const speed = brawlers[character.brawlerType].speed * delta * 60 / 50;
 
             const movementVector = new THREE.Vector3();
 
@@ -544,6 +611,42 @@ export default class Game {
 
             if (this.latestJoystickData !== undefined)
                 this.positionAimAttackMesh(character, this.latestJoystickData);
+
+            for (const projectile of character.projectiles) {
+                projectile.update(delta);
+
+                projectile.model!.position.set(projectile.position.x, 0.5, projectile.position.z);
+                projectile.model!.rotation.set(0, projectile.rotation.y, 0);
+
+                projectile.rotation.y += 0.5;
+
+                const collidingObstacles = this.checkObstacleCollision(projectile.model!, projectile.velocity);
+                const collidingBrawlers = this.checkBrawlerCollision(projectile.model!, projectile.velocity);
+
+                const collidingEnemyBrawlers = collidingBrawlers.filter((b) => b.team !== character.team);
+
+                if (collidingEnemyBrawlers.length > 0) {
+                    for (const brawler of collidingBrawlers) {
+                        const damage = projectile.getBrawlerProjectileProperties().getProjectileDamage(projectile);
+                        brawler.setBrawlerHealth(brawler.health - damage);
+
+                        if (brawler.health <= 0) {
+                            this.scene.remove(brawler.model!);
+                            this.scene.remove(brawler.infoBarUI!);
+                            this.currentGame?.brawlers.splice(this.currentGame?.brawlers.indexOf(brawler), 1);
+                        }
+                    }
+                }
+
+                if (projectile.getDistanceTraveled() > projectile.getBrawlerProjectileProperties().attackRange || collidingObstacles.length > 0 || collidingEnemyBrawlers.length > 0) {
+                    this.scene.remove(projectile.model!);
+                    character.projectiles.splice(character.projectiles.indexOf(projectile), 1);
+                }
+            }
+
+            if (this.brawlerRef) {
+                character.sendBrawlerData(this.brawlerRef);
+            }
         }
         
         for (const brawler of this.currentGame?.brawlers ?? []) {
@@ -575,34 +678,13 @@ export default class Game {
 
             // Update projectiles
             for (const projectile of brawler.projectiles) {
-                projectile.update(delta);
-                projectile.model?.position.set(projectile.position.x, 0.5, projectile.position.z);
-                projectile.model?.rotation.set(0, projectile.rotation.y, 0);
+                // seriously bro? rotation is the thing that breaks it? bullshit.
+                this.scene.remove(projectile.model!);
 
-                projectile.rotation.y += 0.5;
-
-                const collidingObstacles = this.checkObstacleCollision(projectile.model!, projectile.velocity);
-                const collidingBrawlers = this.checkBrawlerCollision(projectile.model!, projectile.velocity);
-
-                const collidingEnemyBrawlers = collidingBrawlers.filter((b) => b.team !== brawler.team);
-
-                if (collidingEnemyBrawlers.length > 0) {
-                    for (const brawler of collidingBrawlers) {
-                        const damage = projectile.brawlerProjectileProperties.getProjectileDamage(projectile);
-                        brawler.setBrawlerHealth(brawler.health - damage);
-
-                        if (brawler.health <= 0) {
-                            this.scene.remove(brawler.model!);
-                            this.scene.remove(brawler.infoBarUI!);
-                            this.currentGame?.brawlers.splice(this.currentGame?.brawlers.indexOf(brawler), 1);
-                        }
-                    }
-                }
-
-                if (projectile.getDistanceTraveled() > projectile.brawlerProjectileProperties.attackRange || collidingObstacles.length > 0 || collidingEnemyBrawlers.length > 0) {
-                    this.scene.remove(projectile.model!);
-                    brawler.projectiles.splice(brawler.projectiles.indexOf(projectile), 1);
-                }
+                projectile.model = new THREE.Mesh(new THREE.IcosahedronGeometry(projectile.getBrawlerProjectileProperties().attackWidth / 1.5, 0), new THREE.MeshStandardMaterial({ color: 0x7FC8FF }))
+                projectile.model!.position.set(projectile.position.x, 0.5, projectile.position.z);
+                // projectile.model!.rotation.set(0, projectile.rotation.y, 0);
+                this.scene.add(projectile.model!);
             }
 
             brawler.infoBarUI?.position.set(brawler.position.x, 3, brawler.position.z);

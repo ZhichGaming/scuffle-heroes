@@ -20,9 +20,9 @@ export const gameModeDescriptions = {
 }
 
 export type GameInfo = {
+    id: string;
     gameMode: GameMode;
     map: GameMap;
-    playerID?: string;
     brawlers: Brawler[];
     duration: number;
     respawnDuration: number;

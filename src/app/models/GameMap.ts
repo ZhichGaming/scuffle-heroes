@@ -8,7 +8,7 @@ export type GameMap = {
     gameEntities: GameObject[];
     
     backgroundObjectPath: string;
-    backgroundObject?: THREE.Object3D;
+    backgroundObject: THREE.Object3D | null;
 
     bannerImageFileName?: string;
 
