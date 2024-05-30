@@ -6,7 +6,7 @@ export const minicity: GameMap = {
     gameEntities: [],
     
     backgroundObjectPath: "maps/bgr_minicity/scene.gltf",
-    backgroundObject: undefined,
+    backgroundObject: null,
 
     firstCorner: new THREE.Vector3(0, 0, 0),
     secondCorner: new THREE.Vector3(21, 0, 33),

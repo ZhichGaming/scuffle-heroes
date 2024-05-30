@@ -281,7 +281,7 @@ export default function App() {
                 <div id='infobars' className='hidden'>
                     {
                         brawlers.map((brawler) => (
-                            <InfoBar brawler={brawler} isEnemy={brawler.team !== playerBrawler?.team} isPlayer={brawler.id === playerBrawler?.id}/>
+                            <InfoBar brawler={brawler} isEnemy={brawler.team !== playerBrawler?.team} isPlayer={brawler.id === playerBrawler?.id} key={brawler.id}/>
                         ))
                     }
                 </div>
