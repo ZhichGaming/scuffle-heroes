@@ -261,7 +261,9 @@ export default function App() {
             zone: document.getElementById('game-container') as HTMLElement,
             mode: 'semi',
         };
-        joystickManager = nipplejs.create(joystickOptions);
+        import('nipplejs').then((nipplejs) => {
+            joystickManager = nipplejs.create(joystickOptions);
+        });
 
         setGameMode(GameMode.KNOCKOUT);
         setGameMap(maps[1]);
