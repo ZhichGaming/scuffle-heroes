@@ -257,18 +257,18 @@ export default function App() {
             }
         });
 
+        setGameMode(GameMode.KNOCKOUT);
+        setGameMap(maps[1]);
+        
         var joystickOptions: JoystickManagerOptions = {
             zone: document.getElementById('game-container') as HTMLElement,
             mode: 'semi',
         };
         import('nipplejs').then((nipplejs) => {
             joystickManager = nipplejs.create(joystickOptions);
+
+            game = new Game(handleGameEnd);
         });
-
-        setGameMode(GameMode.KNOCKOUT);
-        setGameMap(maps[1]);
-
-        game = new Game(handleGameEnd);
     }, [])
     
     return (
