@@ -77,7 +77,6 @@ export default function App() {
                             for (const game of gamesArray) {
                                 if (game.brawlers) {
                                     game.brawlers = Array.from(Object.values(game.brawlers))
-                                    setBrawlers(game.brawlers);
                                 }
                             }
 
@@ -88,6 +87,8 @@ export default function App() {
                             }
 
                             gameRef = ref(getDatabase(), 'games/' + gameFound?.id);
+
+                            console.log('Game found', gameFound);
 
                             if (gameFound) {
                                 gameInfo = gameFound;
@@ -115,8 +116,6 @@ export default function App() {
                                 unsubscribe();
                             }
                         });
-
-
                     }
                 }
             }, { onlyOnce: true });
