@@ -211,6 +211,15 @@ export default class Game {
             const data = snapshot.val();
             if (data === null) return;
 
+            // remove brawlers that are not in the data
+            for (const brawler of this.currentGame?.brawlers ?? []) {
+                if (data[brawler.id ?? ""] === undefined) {
+                    this.scene.remove(brawler.model!);
+                    this.scene.remove(brawler.infoBarUI!);
+                    this.currentGame?.brawlers.splice(this.currentGame?.brawlers.indexOf(brawler), 1);
+                }
+            }
+
             for (const key in data) {
                 if (key === this.playerID) continue;
 
