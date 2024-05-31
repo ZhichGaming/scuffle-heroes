@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import Brawler from "./models/Brawler";
 import { brawlers } from "./Game";
 
-export default function InfoBar( { brawler, isEnemy, isPlayer }: { brawler: Brawler, isEnemy: boolean, isPlayer: boolean }) {
-    const color = isEnemy ? "#D12754" : isPlayer ? "#6FFF64" : "#10DFFE";
+export default function InfoBar( { brawler, playerBrawler }: { brawler: Brawler, playerBrawler: Brawler }) {
+    const isPlayer = brawler.id === playerBrawler.id;
+    const isAlly = brawler.team === playerBrawler.team;
+
+    const color = isPlayer ? "#6FFF64" : isAlly ? "#10DFFE" : "#D12754";
 
     return (
         <div id={"infobar-" + brawler.id} className="flex flex-wrap flex-col justify-center content-center w-24">
