@@ -563,7 +563,6 @@ export default class Game {
 
         for (const brawler of this.currentGame?.brawlers ?? []) {
             if (brawler.model === undefined) continue;
-            if (brawler.id === this.playerID) continue;
 
             const brawlerBoundingBox = new THREE.Box3().setFromObject(brawler.model);
             const brawlerSize = brawlerBoundingBox.getSize(new THREE.Vector3());
@@ -625,7 +624,9 @@ export default class Game {
                 // projectile.model!.rotation.set(0, projectile.rotation.y, 0);
                 this.scene.add(projectile.model!);
 
-                if (brawler.id !== this.playerID && character !== undefined && character.hitProjectileIDs.indexOf(projectile.id) === -1) {
+                const collidingCurrentBrawler = this.checkBrawlerCollision(projectile.model!, projectile.velocity).find((b) => b.id === brawler.id) !== undefined;
+
+                if (brawler.id !== this.playerID && character !== undefined && character.hitProjectileIDs.indexOf(projectile.id) === -1 && collidingCurrentBrawler) {
                     const damage = projectile.getBrawlerProjectileProperties().getProjectileDamage(projectile);
                     character?.setBrawlerHealth(character.health - damage);
                     character.hitProjectileIDs.push(projectile.id);
