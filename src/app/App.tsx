@@ -13,7 +13,7 @@ import InfoBar from "./InfoBar";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInAnonymously } from "firebase/auth";
-import { getDatabase, onDisconnect, ref, set, update, push, onValue, DataSnapshot, DatabaseReference } from "firebase/database";
+import { getDatabase, onDisconnect, ref, set, update, push, onValue, DataSnapshot, DatabaseReference, remove } from "firebase/database";
 import Player, { PlayerState } from "./models/Player";
 import getMiddlePoint from "./utils/getMiddlePoint";
 
@@ -211,7 +211,9 @@ export default function App() {
     }
 
     const handleGameEnd = () => {
-        console.log('Game ended');
+        game.stop();
+
+        remove(gameRef!);
     }
 
     useEffect(() => {

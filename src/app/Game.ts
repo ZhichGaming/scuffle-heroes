@@ -186,18 +186,21 @@ export default class Game {
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
         });
+    }
+
+    public start() {
+        this.animate();
 
         joystickManager.on("move", this.onJoystickMove.bind(this));
         joystickManager.on("end", this.onJoystickRelease.bind(this));
     }
 
-    public start() {
-        this.animate();
-    }
-
     public stop() {
         this.renderer.dispose();
         this.stopped = true;
+
+        joystickManager.off("move", this.onJoystickMove.bind(this));
+        joystickManager.off("end", this.onJoystickRelease.bind(this));
     }
 
     public loadGame(game: GameInfo, playerID?: string) {
@@ -707,10 +710,6 @@ export default class Game {
             }
         }
         
-        if (this.currentGame?.brawlers.length === 1) {
-            this.handleEnd();
-        }
-
         // this.controls.update();
 
         this.scene.traverse(this.nonBloomed.bind(this));
@@ -721,6 +720,11 @@ export default class Game {
         this.labelRenderer.render(this.scene, this.camera);
 
         this.frameCount++;
+        
+        if (this.currentGame?.brawlers.length === 1) {
+            this.handleEnd();
+            return;
+        }
 
         if (!this.stopped) requestAnimationFrame(this.animate.bind(this));
     }
