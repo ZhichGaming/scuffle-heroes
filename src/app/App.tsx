@@ -15,6 +15,7 @@ import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { getDatabase, onDisconnect, ref, set, update, push, onValue, DataSnapshot, DatabaseReference } from "firebase/database";
 import Player, { PlayerState } from "./models/Player";
+import getMiddlePoint from "./utils/getMiddlePoint";
 
 export let game: Game;
 export let joystickManager: JoystickManager;
@@ -96,6 +97,7 @@ export default function App() {
                                     const newBrawler = new Brawler(brawler.brawlerType);
                                     newBrawler.id = brawler.id;
                                     newBrawler.team = brawler.team;
+                                    newBrawler.position.set(brawler.position.x, brawler.position.y, brawler.position.z);
                                     return newBrawler;
                                 });
                                 setBrawlers(gameInfo.brawlers);
@@ -149,9 +151,12 @@ export default function App() {
                 respawnDuration: 5,
             };
 
+            playerBrawler.position.set(getMiddlePoint(gameInfo.map).x - 0.5, getMiddlePoint(gameInfo.map).y, 2);
+
             const enemyBrawler = new Brawler(BrawlerType.PIPER);
             enemyBrawler.id = enemyID;
             enemyBrawler.team = 1;
+            enemyBrawler.position.set(getMiddlePoint(gameInfo.map).x, getMiddlePoint(gameInfo.map).y, gameInfo.map.secondCorner.z - 3);
 
             console.log('Game created', gameInfo);
 
