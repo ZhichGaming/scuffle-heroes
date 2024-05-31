@@ -21,7 +21,7 @@ import getValues from './utils/getValues';
 import { Controller } from './Controller';
 import { joystickManager } from './App';
 import { EventData, JoystickOutputData } from 'nipplejs';
-import { DatabaseReference, getDatabase, onValue, ref, set } from "firebase/database";
+import { DatabaseReference, getDatabase, onValue, ref, set, child, remove } from "firebase/database";
 
 export const brawlers: { [key in BrawlerType]: BrawlerProperties } = {
     [BrawlerType.PIPER]: piper
@@ -259,7 +259,7 @@ export default class Game {
 
                     return currentProjectile;
                 }) ?? [];
-                // console.log(brawlerInstance.projectiles);
+                brawlerInstance.hitProjectileIDs = Array.from(brawler.hitProjectileIDs ?? []);
             }
         });
 
@@ -579,6 +579,57 @@ export default class Game {
 
         const character = this.currentGame?.brawlers.find((brawler) => brawler.id === this.playerID);
 
+        for (const brawler of this.currentGame?.brawlers ?? []) {
+            const model = brawler.model;
+            
+            if (model === undefined) continue;
+            
+            if (brawler.state !== BrawlerModelAnimation.WALK && brawler.velocity.length() > 0) {
+                this.setModel(brawler, BrawlerModelAnimation.WALK);
+                brawler.state = BrawlerModelAnimation.WALK;
+            } else if (brawler.state !== BrawlerModelAnimation.IDLE && brawler.velocity.length() === 0) {
+                this.setModel(brawler, BrawlerModelAnimation.IDLE);
+                brawler.state = BrawlerModelAnimation.IDLE;
+            }
+
+            model.position.set(brawler.position.x, 0, brawler.position.z);
+
+            // Rotate the character
+            if (brawler.velocity.length() > 0) {
+                // model.rotation.y = Math.atan2(brawler.velocity.x, brawler.velocity.z);
+                
+                // Quaternion rotation
+                const quaternion = new THREE.Quaternion();
+                quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), brawler.velocity.normalize());
+                model.quaternion.slerp(quaternion, 0.2);
+            }
+
+            brawler.mixer?.update(delta);
+
+            // Update projectiles
+            for (const projectile of brawler.projectiles) {
+                // seriously bro? rotation is the thing that breaks it? bullshit.
+                this.scene.remove(projectile.model!);
+
+                projectile.model = new THREE.Mesh(new THREE.IcosahedronGeometry(projectile.getBrawlerProjectileProperties().attackWidth / 1.5, 0), new THREE.MeshStandardMaterial({ color: 0x7FC8FF }))
+                projectile.model!.position.set(projectile.position.x, 0.5, projectile.position.z);
+                // projectile.model!.rotation.set(0, projectile.rotation.y, 0);
+                this.scene.add(projectile.model!);
+
+                if (brawler.id !== this.playerID && character !== undefined && character.hitProjectileIDs.indexOf(projectile.id) === -1) {
+                    const damage = projectile.getBrawlerProjectileProperties().getProjectileDamage(projectile);
+                    character?.setBrawlerHealth(character.health - damage);
+                    character.hitProjectileIDs.push(projectile.id);
+    
+                    if (this.brawlerRef) {
+                        set(child(this.brawlerRef, "health"), character?.health);
+                    }
+                }
+            }
+
+            brawler.infoBarUI?.position.set(brawler.position.x, 3, brawler.position.z);
+        }
+
         if (character !== undefined) {
             const speed = brawlers[character.brawlerType].speed * delta * 60 / 50;
 
@@ -625,19 +676,6 @@ export default class Game {
 
                 const collidingEnemyBrawlers = collidingBrawlers.filter((b) => b.team !== character.team);
 
-                if (collidingEnemyBrawlers.length > 0) {
-                    for (const brawler of collidingBrawlers) {
-                        const damage = projectile.getBrawlerProjectileProperties().getProjectileDamage(projectile);
-                        brawler.setBrawlerHealth(brawler.health - damage);
-
-                        if (brawler.health <= 0) {
-                            this.scene.remove(brawler.model!);
-                            this.scene.remove(brawler.infoBarUI!);
-                            this.currentGame?.brawlers.splice(this.currentGame?.brawlers.indexOf(brawler), 1);
-                        }
-                    }
-                }
-
                 if (projectile.getDistanceTraveled() > projectile.getBrawlerProjectileProperties().attackRange || collidingObstacles.length > 0 || collidingEnemyBrawlers.length > 0) {
                     this.scene.remove(projectile.model!);
                     character.projectiles.splice(character.projectiles.indexOf(projectile), 1);
@@ -647,47 +685,20 @@ export default class Game {
             if (this.brawlerRef) {
                 character.sendBrawlerData(this.brawlerRef);
             }
+
+            if (character.health <= 0) {
+                this.scene.remove(character.model!);
+                this.scene.remove(character.infoBarUI!);
+                this.currentGame?.brawlers.splice(this.currentGame?.brawlers.indexOf(character), 1);
+
+                if (this.brawlerRef) {
+                    remove(this.brawlerRef);
+                }
+            }
         }
         
-        for (const brawler of this.currentGame?.brawlers ?? []) {
-            const model = brawler.model;
-            
-            if (model === undefined) continue;
-            
-            if (brawler.state !== BrawlerModelAnimation.WALK && brawler.velocity.length() > 0) {
-                this.setModel(brawler, BrawlerModelAnimation.WALK);
-                brawler.state = BrawlerModelAnimation.WALK;
-            } else if (brawler.state !== BrawlerModelAnimation.IDLE && brawler.velocity.length() === 0) {
-                this.setModel(brawler, BrawlerModelAnimation.IDLE);
-                brawler.state = BrawlerModelAnimation.IDLE;
-            }
-
-            model.position.set(brawler.position.x, 0, brawler.position.z);
-
-            // Rotate the character
-            if (brawler.velocity.length() > 0) {
-                // model.rotation.y = Math.atan2(brawler.velocity.x, brawler.velocity.z);
-                
-                // Quaternion rotation
-                const quaternion = new THREE.Quaternion();
-                quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), brawler.velocity.normalize());
-                model.quaternion.slerp(quaternion, 0.2);
-            }
-
-            brawler.mixer?.update(delta);
-
-            // Update projectiles
-            for (const projectile of brawler.projectiles) {
-                // seriously bro? rotation is the thing that breaks it? bullshit.
-                this.scene.remove(projectile.model!);
-
-                projectile.model = new THREE.Mesh(new THREE.IcosahedronGeometry(projectile.getBrawlerProjectileProperties().attackWidth / 1.5, 0), new THREE.MeshStandardMaterial({ color: 0x7FC8FF }))
-                projectile.model!.position.set(projectile.position.x, 0.5, projectile.position.z);
-                // projectile.model!.rotation.set(0, projectile.rotation.y, 0);
-                this.scene.add(projectile.model!);
-            }
-
-            brawler.infoBarUI?.position.set(brawler.position.x, 3, brawler.position.z);
+        if (this.currentGame?.brawlers.length === 1) {
+            this.handleEnd();
         }
 
         // this.controls.update();

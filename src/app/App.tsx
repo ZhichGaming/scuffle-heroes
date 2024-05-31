@@ -206,7 +206,7 @@ export default function App() {
     }
 
     const handleGameEnd = () => {
-
+        console.log('Game ended');
     }
 
     useEffect(() => {

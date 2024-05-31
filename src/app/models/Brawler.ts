@@ -100,6 +100,7 @@ export default class Brawler extends GameObject {
     aimSuperMesh?: THREE.Mesh;
 
     projectiles: BrawlerProjectile[] = [];
+    hitProjectileIDs: string[] = [];
 
     infoBarUI?: CSS2DObject;
 
