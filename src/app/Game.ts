@@ -578,6 +578,26 @@ export default class Game {
         return collidingBrawlers;
     }
 
+    private checkPlayerBrawlerCollision(object: THREE.Object3D, direction: THREE.Vector3): boolean {
+        const boundingBox = new THREE.Box3().setFromObject(object);
+        const objectSize = boundingBox.getSize(new THREE.Vector3());
+
+        const newPosition = object.position.clone().add(direction);
+
+        const character = this.currentGame?.brawlers.find((brawler) => brawler.id === this.playerID);
+
+        if (character) {
+            const brawlerBoundingBox = new THREE.Box3().setFromObject(character.model!);
+            const brawlerSize = brawlerBoundingBox.getSize(new THREE.Vector3());
+
+            if (this.checkColliding(newPosition, character.model!.position, objectSize, brawlerSize)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private checkColliding(position1: THREE.Vector3, position2: THREE.Vector3, size1: THREE.Vector3, size2: THREE.Vector3): boolean {
         return (position1.x < position2.x + size2.x &&
             position1.x + size1.x > position2.x &&
@@ -627,12 +647,15 @@ export default class Game {
                 // projectile.model!.rotation.set(0, projectile.rotation.y, 0);
                 this.scene.add(projectile.model!);
 
-                const collidingCurrentBrawler = this.checkBrawlerCollision(projectile.model!, projectile.velocity).find((b) => b.id === brawler.id) !== undefined;
+                const collidingCurrentBrawler = this.checkPlayerBrawlerCollision(projectile.model!, projectile.velocity);
+                console.log(projectile.position.add(projectile.velocity), character?.position)
+                console.log(this.checkBrawlerCollision(projectile.model!, projectile.velocity))
+                console.log(brawler.id, this.playerID)
 
-                if (brawler.id !== this.playerID && character !== undefined && character.hitProjectileIDs.indexOf(projectile.id) === -1 && collidingCurrentBrawler) {
+                if (brawler.id !== this.playerID && character?.hitProjectileIDs.indexOf(projectile.id) === -1 && collidingCurrentBrawler) {
                     const damage = projectile.getBrawlerProjectileProperties().getProjectileDamage(projectile);
                     character?.setBrawlerHealth(character.health - damage);
-                    character.hitProjectileIDs.push(projectile.id);
+                    character?.hitProjectileIDs.push(projectile.id);
     
                     if (this.brawlerRef) {
                         set(child(this.brawlerRef, "health"), character?.health);
@@ -687,7 +710,9 @@ export default class Game {
                 const collidingObstacles = this.checkObstacleCollision(projectile.model!, projectile.velocity);
                 const collidingBrawlers = this.checkBrawlerCollision(projectile.model!, projectile.velocity);
 
-                const collidingEnemyBrawlers = collidingBrawlers.filter((b) => b.team !== character.team);
+                // I'm pretty sure the fact that the fps is too low is the reason why the brawlers aren't taking damage half of the time
+                // const collidingEnemyBrawlers = collidingBrawlers.filter((b) => b.team !== character.team);
+                const collidingEnemyBrawlers = []
 
                 if (projectile.getDistanceTraveled() > projectile.getBrawlerProjectileProperties().attackRange || collidingObstacles.length > 0 || collidingEnemyBrawlers.length > 0) {
                     this.scene.remove(projectile.model!);
