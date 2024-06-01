@@ -69,7 +69,7 @@ export default class Game {
     private obstaclesModel?: THREE.Object3D;
 
     stopped = false;
-    private handleEnd: () => void;
+    private handleEnd: (win: boolean) => void;
     brawlersRef?: DatabaseReference;
     brawlerRef?: DatabaseReference;
 
@@ -78,7 +78,7 @@ export default class Game {
     currentGame?: GameInfo;
     playerID?: string;
 
-    constructor(handleEnd: () => void) {
+    constructor(handleEnd: (win: boolean) => void) {
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(15, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') as HTMLCanvasElement });
@@ -707,6 +707,9 @@ export default class Game {
                 if (this.brawlerRef) {
                     remove(this.brawlerRef);
                 }
+
+                this.handleEnd(false);
+                return;
             }
         }
         
@@ -722,7 +725,7 @@ export default class Game {
         this.frameCount++;
         
         if (this.currentGame?.brawlers.length === 1) {
-            this.handleEnd();
+            this.handleEnd(true);
             return;
         }
 

@@ -16,6 +16,7 @@ import { getAuth, signInAnonymously } from "firebase/auth";
 import { getDatabase, onDisconnect, ref, set, update, push, onValue, DataSnapshot, DatabaseReference, remove } from "firebase/database";
 import Player, { PlayerState } from "./models/Player";
 import getMiddlePoint from "./utils/getMiddlePoint";
+import GameOverMenu from "./GameOverMenu";
 
 export let game: Game;
 export let joystickManager: JoystickManager;
@@ -32,6 +33,8 @@ export default function App() {
     const [gameMap, setGameMap] = useState<GameMap>();
     const [brawlers, setBrawlers] = useState<Brawler[]>([]);
     const [playerBrawler, setPlayerBrawler] = useState<Brawler>(new Brawler(BrawlerType.PIPER));
+
+    let won = false;
 
     const [player, setPlayer] = useState<Player>(new Player('Player', 0, 0));
 
@@ -200,6 +203,8 @@ export default function App() {
             document.getElementById('game-container')?.classList.remove('undisplayed');
             document.getElementById('menu-container')?.classList.add('undisplayed');
             document.getElementById('menu-container')?.classList.remove('displayed');
+            document.getElementById('gameover-container')?.classList.add('undisplayed');
+            document.getElementById('gameover-container')?.classList.remove('displayed');
         }, 1500)
 
         const appContainer = document.getElementById('app-container');
@@ -210,10 +215,41 @@ export default function App() {
         }, 3200);
     }
 
-    const handleGameEnd = () => {
+    const handleGameEnd = (win: boolean) => {
         game.stop();
 
         remove(gameRef!);
+
+        document.getElementById('gameover-menu')!.style.backgroundImage = `url('/${win ? "win-bg" : "lose-bg"}.webp')`
+        document.getElementById('gameover-menu-title')!.innerText = win ? 'VICTORY!' : 'DEFEAT';
+
+        setTimeout(() => {
+            document.getElementById('game-container')?.classList.add('undisplayed');
+            document.getElementById('game-container')?.classList.remove('displayed');
+            document.getElementById('menu-container')?.classList.add('undisplayed');
+            document.getElementById('menu-container')?.classList.remove('displayed');
+            document.getElementById('gameover-container')?.classList.add('displayed');
+            document.getElementById('gameover-container')?.classList.remove('undisplayed');
+        }, 1500)
+
+        const appContainer = document.getElementById('app-container');
+        appContainer?.classList.add('animate_tv');
+
+        setTimeout(() => {
+            appContainer?.classList.remove('animate_tv');
+        }, 3200);
+    }
+
+    const handlePressMainMenu = () => {
+        if (playerRef) {
+            remove(playerRef);
+        }
+
+        if (gameRef) {
+            remove(gameRef);
+        }
+
+        location.reload();
     }
 
     useEffect(() => {
@@ -280,6 +316,9 @@ export default function App() {
     return (
         <div className="bg-black w-screen h-screen">
             <div id="app-container" className="w-full h-full">
+                <div id="gameover-container" className="absolute undisplayed w-full h-full">
+                    <GameOverMenu handlePressMainMenu={handlePressMainMenu} brawler={playerBrawler}/>
+                </div>
                 <div id="menu-container" className="absolute displayed w-full h-full">
                     <MainMenu gameMode={gameMode} gameMap={gameMap} handlePressStart={handlePressStart} player={player}/>
                 </div>
