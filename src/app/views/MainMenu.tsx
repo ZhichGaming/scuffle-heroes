@@ -4,7 +4,6 @@ import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css'
 import Player, { PlayerState } from '../models/Player';
 import { GameMap } from '../models/GameMap';
-import LocaleSwitcher from '../i18n/LocaleSwitcher';
 
 export default function MainMenu({ gameMode, gameMap, handlePressStart, player }: { gameMode: GameMode | undefined, gameMap: GameMap | undefined, handlePressStart: () => void, player: Player | undefined }) {
 
