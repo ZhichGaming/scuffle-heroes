@@ -12,7 +12,7 @@ export let piper: BrawlerProperties = {
     attackName: "Gunbrella",
     attackProjectileCount: 1,
     attackProjectile: {
-        getProjectileDamage: (object) => 420 + (object.getDistanceTraveled() * 1.4),
+        getProjectileDamage: (object) => 420 + (object.getDistanceTraveled() * 50),
         appliedEffects: [],
         appliedEffectDuration: 0,
         attackShape: BrawlerAttackShape.RECTANGLE,
