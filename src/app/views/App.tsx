@@ -1,21 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Game, { maps } from "./Game";
+import Game, { maps } from "../Game";
 import React from "react";
-import { GameInfo, GameMode } from "./models/GameInfo";
-import { GameMap } from "./models/GameMap";
-import Brawler, { BrawlerType } from "./models/Brawler";
+import { GameInfo, GameMode } from "../models/GameInfo";
+import { GameMap } from "../models/GameMap";
+import Brawler, { BrawlerType } from "../models/Brawler";
 import MainMenu from "./MainMenu";
-import "./transition.css";
+import "../styles/transition.css";
 import nipplejs, { JoystickManager, JoystickManagerOptions } from 'nipplejs';
 import InfoBar from "./InfoBar";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { getDatabase, onDisconnect, ref, set, update, push, onValue, DataSnapshot, DatabaseReference, remove } from "firebase/database";
-import Player, { PlayerState } from "./models/Player";
-import getMiddlePoint from "./utils/getMiddlePoint";
+import Player, { PlayerState } from "../models/Player";
+import getMiddlePoint from "../utils/getMiddlePoint";
 import GameOverMenu from "./GameOverMenu";
 
 export let game: Game;

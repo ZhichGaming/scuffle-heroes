@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import Brawler from "./models/Brawler";
-import { brawlers } from "./Game";
+import Brawler from "../models/Brawler";
+import { brawlers } from "../Game";
 
 export default function InfoBar( { brawler, playerBrawler }: { brawler: Brawler, playerBrawler: Brawler }) {
     const isPlayer = brawler.id === playerBrawler.id;

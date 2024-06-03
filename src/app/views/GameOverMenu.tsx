@@ -1,4 +1,4 @@
-import Brawler from "./models/Brawler";
+import Brawler from "../models/Brawler";
 
 export default function GameOverMenu({ handlePressMainMenu, brawler }: { handlePressMainMenu: () => void, brawler: Brawler | undefined }) {
     return (

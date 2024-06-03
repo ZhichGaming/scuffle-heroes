@@ -19,7 +19,7 @@ import { gemS } from './models/obstacles/gemSpawner';
 import { piper } from './models/brawlers/Piper';
 import getValues from './utils/getValues';
 import { Controller } from './Controller';
-import { joystickManager } from './App';
+import { joystickManager } from './views/App';
 import { EventData, JoystickOutputData } from 'nipplejs';
 import { DatabaseReference, getDatabase, onValue, ref, set, child, remove } from "firebase/database";
 
