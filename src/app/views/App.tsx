@@ -221,7 +221,7 @@ export default function App() {
         remove(gameRef!);
 
         document.getElementById('gameover-menu')!.style.backgroundImage = `url('/${win ? "win-bg" : "lose-bg"}.webp')`
-        document.getElementById('gameover-menu-title')!.innerText = win ? 'VICTORY!' : 'DEFEAT';
+        document.getElementById('gameover-menu-title')!.innerText = win ? 'VICTOIRE!' : 'DÉFAITE';
 
         setTimeout(() => {
             document.getElementById('game-container')?.classList.add('undisplayed');

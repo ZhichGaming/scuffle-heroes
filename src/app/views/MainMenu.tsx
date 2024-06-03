@@ -11,7 +11,7 @@ export default function MainMenu({ gameMode, gameMap, handlePressStart, player }
         <div className='bg-[url("/Regular.webp")] h-full w-full bg-cover flex flex-col'>
             <div className='flex justify-center items-center space-x-6 mt-10'>
                 <div className='bg-gray-700 w-1/2 h-10 rounded-md font-bold text-white text-3xl border-black border shadow-md flex justify-center items-center'>
-                    <p className='text-sm'>0 Wins</p>
+                    <p className='text-sm'>Scuffle Heroes</p>
                 </div>
             </div>
             <div className='flex justify-center items-center space-x-6 flex-grow'>
@@ -24,7 +24,7 @@ export default function MainMenu({ gameMode, gameMap, handlePressStart, player }
                     <span className='text-sm text-gray-300'>{gameMode && gameModeDescriptions[gameMode] || <Skeleton width={300} containerClassName="flex-1"/>}</span>
                 </button>
                 <button className='w-64 h-20 rounded-md font-bold text-white text-3xl border-black border shadow-md' style={{ backgroundColor: player?.playerState === PlayerState.MATCHMAKING ? "rgb(239, 68, 68)" : "rgb(234, 179, 8)" }} onClick={handlePressStart}>
-                    <span className='font-outline-1'>{ player?.playerState === PlayerState.MATCHMAKING ? "CANCEL" : "PLAY" }</span>
+                    <span className='font-outline-1'>{ player?.playerState === PlayerState.MATCHMAKING ? "ANNULER" : "JOUER" }</span>
                 </button>
             </div>
         </div>

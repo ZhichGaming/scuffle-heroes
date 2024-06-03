@@ -2,21 +2,21 @@ import Brawler from "./Brawler";
 import { GameMap } from "./GameMap";
 
 export enum GameMode {
-    SHOWDOWN = "Showdown",
-    GEM_GRAB = "Gem Grab",
-    BRAWL_BALL = "Brawl Ball",
-    SIEGE = "Siege",
-    BOUNTY = "Bounty",
-    KNOCKOUT = "Knockout",
+    SHOWDOWN = "Affrontement",
+    GEM_GRAB = "Attrape-gemmes",
+    BRAWL_BALL = "Balle éclate",
+    SIEGE = "Siège",
+    BOUNTY = "Prime",
+    KNOCKOUT = "K.O.",
 }
 
 export const gameModeDescriptions = {
-    [GameMode.SHOWDOWN]: "Survive in a shrinking map and be the last one standing!",
-    [GameMode.GEM_GRAB]: "Collect gems and hold them for as long as possible!",
-    [GameMode.BRAWL_BALL]: "Score goals with your team to win!",
-    [GameMode.SIEGE]: "Collect bolts to spawn a robot and destroy the enemy's base!",
-    [GameMode.BOUNTY]: "Defeat opponents to earn stars, but don't get defeated!",
-    [GameMode.KNOCKOUT]: "Defeat the enemy team to win the round!",
+    [GameMode.SHOWDOWN]: "Survivez sur une carte qui rétrécit et soyez le dernier debout!",
+    [GameMode.GEM_GRAB]: "Collectez des gemmes et gardez-les aussi longtemps que possible!",
+    [GameMode.BRAWL_BALL]: "Marquez des buts avec votre équipe pour gagner!",
+    [GameMode.SIEGE]: "Collectez des boulons pour faire apparaître un robot et détruire la base ennemie!",
+    [GameMode.BOUNTY]: "Battez les adversaires pour gagner des étoiles, mais ne vous faites pas battre!",
+    [GameMode.KNOCKOUT]: "Battez l'équipe ennemie pour gagner la manche!",
 }
 
 export type GameInfo = {
