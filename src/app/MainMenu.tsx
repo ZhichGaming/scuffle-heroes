@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GameInfo, gameModeDescriptions } from './models/GameInfo';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css'
+import { brawlers } from './Game';
+import * as THREE from 'three';
+import { BrawlerType } from './models/Brawler';
+import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 
 export default function MainMenu({ gameInfo, handlePressStart }: { gameInfo: GameInfo | undefined, handlePressStart: () => void }) {
     const onPressStart = () => {
@@ -23,6 +27,53 @@ export default function MainMenu({ gameInfo, handlePressStart }: { gameInfo: Gam
         }, 3200);
     }
 
+    useEffect(() => {
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
+
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("menu-character") as HTMLCanvasElement, alpha: true, antialias: true });
+        // renderer.setSize( window.innerWidth, window.innerHeight );
+
+        // const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        // const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+        // const cube = new THREE.Mesh( geometry, material );
+        // scene.add( cube );
+        const light = new THREE.AmbientLight();
+        scene.add(light)
+
+        const pointLight = new THREE.PointLight(0xffffff, 10);
+        pointLight.position.set(0, 5, 5)
+        scene.add(pointLight)
+
+        const clock = new THREE.Clock()
+
+        let mixer: THREE.AnimationMixer | undefined;
+
+        new GLTFLoader().load("/brawlers/piper/piper_idle.gltf", (gltf) => {
+            const mesh = gltf.scene.children[0] as THREE.Mesh;
+            const scale = 0.5
+            mesh.scale.set(scale, scale, scale)
+            mesh.position.setY(-2.5)
+            scene.add(mesh)
+
+            mixer = new THREE.AnimationMixer(mesh);
+            mixer.clipAction(gltf.animations[0]).play()
+        });
+
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame( animate );
+            const delta = clock.getDelta()
+
+            mixer?.update(delta)
+
+            renderer.render( scene, camera );
+        }
+
+        animate();
+    }, [])
+
     return (
         <div className='bg-[url("/Regular.webp")] h-full w-full bg-cover flex flex-col'>
             <div className='flex justify-center items-center space-x-6 mt-10'>
@@ -31,7 +82,7 @@ export default function MainMenu({ gameInfo, handlePressStart }: { gameInfo: Gam
                 </div>
             </div>
             <div className='flex justify-center items-center space-x-6 flex-grow'>
-                <p>To be added.</p>
+                <canvas id='menu-character' className='h-[30rem] w-[30rem] p-12'></canvas>
             </div>
             <div className='flex justify-center items-center space-x-6 mb-10'>
                 <button className={`bg-gray-700 w-80 h-20 rounded-md text-white border-black border shadow-md bg-cover bg-center`} style={{ backgroundImage: `linear-gradient(rgba(55, 65, 81, 0.5), rgba(55, 65, 81, 0.9)), url("/banners/${gameInfo?.map.bannerImageFileName || ''}")` }}>
