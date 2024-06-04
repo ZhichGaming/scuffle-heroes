@@ -524,6 +524,7 @@ export default class Game {
 
         if (this.latestJoystickData?.force ?? 0 > 0.3) {
             const projectile = character.shootProjectile(this.latestJoystickData?.angle.radian ?? 0);
+            character.lastHealInterruptTime = 0;
 
             this.scene.add(projectile.model!);
 
@@ -648,14 +649,13 @@ export default class Game {
                 this.scene.add(projectile.model!);
 
                 const collidingCurrentBrawler = this.checkPlayerBrawlerCollision(projectile.model!, projectile.velocity);
-                console.log(projectile.position.add(projectile.velocity), character?.position)
-                console.log(this.checkBrawlerCollision(projectile.model!, projectile.velocity))
-                console.log(brawler.id, this.playerID)
 
                 if (brawler.id !== this.playerID && character?.hitProjectileIDs.indexOf(projectile.id) === -1 && collidingCurrentBrawler) {
                     const damage = projectile.getBrawlerProjectileProperties().getProjectileDamage(projectile);
                     character?.setBrawlerHealth(character.health - damage);
                     character?.hitProjectileIDs.push(projectile.id);
+
+                    character!.lastHealInterruptTime = 0;
     
                     if (this.brawlerRef) {
                         set(child(this.brawlerRef, "health"), character?.health);
@@ -735,6 +735,14 @@ export default class Game {
 
                 this.handleEnd(false);
                 return;
+            }
+
+            character.lastHealInterruptTime++;
+            character.lastHealTime++;
+
+            if (character.lastHealInterruptTime >= 60 && character.health < character.getbrawlerProperties().maxHealth && character.lastHealTime >= 30) {
+                character.setBrawlerHealth(character.health + character.getbrawlerProperties().maxHealth / 7);
+                character.lastHealTime = 0;
             }
         }
         
