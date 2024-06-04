@@ -152,7 +152,7 @@ export default class Brawler extends GameObject {
         if (this.infoBarUI) {
             const ammoElements = Array.prototype.slice.call(this.infoBarUI.element.getElementsByClassName("ammo")[0].children).map((elem) => elem.firstChild!) as Array<HTMLElement>;
             for (let i = 0; i < ammoElements.length; i++) {
-                ammoElements[i].style.width = i <= this.ammo - 1 ? "100%" : i >= this.ammo ? 0 : (this.ammo - Math.floor(this.ammo)) * 100 + "%"
+                ammoElements[i].style.width = i <= this.ammo - 1 ? "100%" : i >= this.ammo ? "0" : (this.ammo - Math.floor(this.ammo)) * 100 + "%"
             }
         }
     }
