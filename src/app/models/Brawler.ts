@@ -95,6 +95,7 @@ export default class Brawler extends GameObject {
     state: BrawlerModelAnimation = BrawlerModelAnimation.IDLE;
     lastHealInterruptTime: number = 0;
     lastHealTime: number = 0;
+    ammo: number = 3;
     
     aiming: boolean = false;
     aimAttackMesh?: THREE.Mesh;
@@ -142,6 +143,17 @@ export default class Brawler extends GameObject {
             
             const healthbarElement = this.infoBarUI.element.getElementsByClassName("healthbar")[0] as HTMLElement;
             healthbarElement.style.width = (this.health / this.getbrawlerProperties().maxHealth * 100).toString() + "%";
+        }
+    }
+
+    setBrawlerAmmo(ammo: number) {
+        this.ammo = Math.min(Math.max(ammo, 0), 3);
+
+        if (this.infoBarUI) {
+            const ammoElements = Array.prototype.slice.call(this.infoBarUI.element.getElementsByClassName("ammo")[0].children).map((elem) => elem.firstChild!) as Array<HTMLElement>;
+            for (let i = 0; i < ammoElements.length; i++) {
+                ammoElements[i].style.width = i <= this.ammo - 1 ? "100%" : i >= this.ammo ? 0 : (this.ammo - Math.floor(this.ammo)) * 100 + "%"
+            }
         }
     }
 

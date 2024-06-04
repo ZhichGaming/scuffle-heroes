@@ -238,6 +238,8 @@ export default class Game {
                 brawlerInstance?.acceleration.set(brawler.acceleration.x, brawler.acceleration.y, brawler.acceleration.z);
                 brawlerInstance?.rotation.set(brawler.rotation.x, brawler.rotation.y, brawler.rotation.z, brawler.rotation.w);
 
+                brawlerInstance.ammo = brawler.ammo;
+
                 brawlerInstance.aiming = brawler.aiming;
                 brawlerInstance.aimingSuper = brawler.aimingSuper;
                 
@@ -522,9 +524,10 @@ export default class Game {
         character.aiming = false;
         if (character.aimAttackMesh !== undefined) character.aimAttackMesh.visible = false;
 
-        if (this.latestJoystickData?.force ?? 0 > 0.3) {
+        if ((this.latestJoystickData?.force ?? 0 > 0.3) && character.ammo >= 1) {
             const projectile = character.shootProjectile(this.latestJoystickData?.angle.radian ?? 0);
             character.lastHealInterruptTime = 0;
+            character.setBrawlerAmmo(character.ammo - 1);
 
             this.scene.add(projectile.model!);
 
@@ -719,6 +722,8 @@ export default class Game {
                     character.projectiles.splice(character.projectiles.indexOf(projectile), 1);
                 }
             }
+
+            character.setBrawlerAmmo(character.ammo + delta / 4 * character.getbrawlerProperties().reloadSpeed);
 
             if (this.brawlerRef) {
                 character.sendBrawlerData(this.brawlerRef);

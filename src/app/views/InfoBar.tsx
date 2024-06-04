@@ -15,6 +15,17 @@ export default function InfoBar( { brawler, playerBrawler }: { brawler: Brawler,
                 <div className="healthbar h-full rounded-full" style={{ backgroundColor: color }}/>
                 <h1 className="health absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-sm font-outline-1">{brawler?.health}</h1>
             </div>
+            <div className="ammo flex">
+                <div className="relative w-full h-[0.7rem] bg-gray-800 text-white rounded-[0.2rem] border-black border-[1.5px] overflow-clip">
+                    <div className="healthbar h-full rounded-[0.2rem] bg-orange-500"/>
+                </div>
+                <div className="relative w-full h-[0.7rem] bg-gray-800 text-white rounded-[0.2rem] border-black border-[1.5px] overflow-clip">
+                    <div className="healthbar h-full rounded-[0.2rem] bg-orange-500"/>
+                </div>
+                <div className="relative w-full h-[0.7rem] bg-gray-800 text-white rounded-[0.2rem] border-black border-[1.5px] overflow-clip">
+                    <div className="healthbar h-full rounded-[0.2rem] bg-orange-500"/>
+                </div>
+            </div>
         </div>
     );
 }
