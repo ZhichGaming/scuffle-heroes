@@ -264,12 +264,12 @@ export default class Game {
                     currentProjectile.position = new THREE.Vector3().add(p.position);
                     currentProjectile.velocity = new THREE.Vector3().add(p.velocity);
                     currentProjectile.acceleration = new THREE.Vector3().add(p.acceleration);
-                    currentProjectile.rotation = new THREE.Quaternion().copy(p.rotation);
+                    // currentProjectile.rotation = new THREE.Quaternion().copy(p.rotation);
                     currentProjectile.startPosition = new THREE.Vector3().add(p.startPosition);
                     currentProjectile.parentBrawler = p.parentBrawler;
 
                     currentProjectile.model!.position.set(currentProjectile.position.x, 0.5, currentProjectile.position.z);
-                    currentProjectile.model!.rotation.set(0, currentProjectile.rotation.y, 0);
+                    // currentProjectile.model!.rotation.set(0, currentProjectile.rotation.y, 0);
 
                     return currentProjectile;
                 }) ?? [];
@@ -690,9 +690,11 @@ export default class Game {
             movementVector.normalize();
             movementVector.multiplyScalar(speed);
 
-            if (character.model) character.velocity = this.checkObstacleCollision(character.model, movementVector).length > 0 ? new THREE.Vector3() : movementVector;
+            const inBounds = character.position.x + movementVector.x > this.currentGame!.map.firstCorner.x && character.position.x + movementVector.x < this.currentGame!.map.secondCorner.x && character.position.z + movementVector.z > this.currentGame!.map.firstCorner.z && character.position.z + movementVector.z < this.currentGame!.map.secondCorner.z;
 
-            character.update(delta);
+            if (character.model) character.velocity = this.checkObstacleCollision(character.model, movementVector).length > 0 || !inBounds ? new THREE.Vector3() : movementVector;
+
+            character.update(0.02);
 
             const newCameraTarget = new THREE.Vector3(getMiddlePoint(this.currentGame!.map).x, getMiddlePoint(this.currentGame!.map).y, character.position.z);
             this.camera.position.setZ(character.position.z + 50)
