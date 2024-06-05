@@ -288,7 +288,7 @@ export default class Game {
             this.scene.add(gltf.scene);
         });
 
-        this.camera.position.set(getMiddlePoint(game.map).x, 50, 40);
+        this.camera.position.set(getMiddlePoint(game.map).x, 40, 32);
         this.camera.lookAt(getMiddlePoint(game.map).x, 0, 0);
         // this.controls.target = new THREE.Vector3(getMiddlePoint(game.map).x, 0, 0);
 
@@ -718,7 +718,7 @@ export default class Game {
             character.update(0.02);
 
             const newCameraTarget = new THREE.Vector3(getMiddlePoint(this.currentGame!.map).x, getMiddlePoint(this.currentGame!.map).y, character.position.z);
-            this.camera.position.setZ(character.position.z + 50)
+            this.camera.position.setZ(character.position.z + 32)
             this.camera.lookAt(newCameraTarget);
             // this.controls.target = newCameraTarget
 
