@@ -245,6 +245,7 @@ export default class Game {
                 brawlerInstance?.rotation.set(brawler.rotation.x, brawler.rotation.y, brawler.rotation.z, brawler.rotation.w);
 
                 brawlerInstance.ammo = brawler.ammo;
+                brawlerInstance.inBush = brawler.inBush;
 
                 brawlerInstance.aiming = brawler.aiming;
                 brawlerInstance.aimingSuper = brawler.aimingSuper;
@@ -439,6 +440,7 @@ export default class Game {
         brawler.model = newClonedModel;
         brawler.model?.position.set(brawler.position.x, 0, brawler.position.z);
         brawler.model?.rotation.copy(oldModel?.rotation ?? new THREE.Euler(0, 0, 0));
+        if (brawler.id !== this.playerID) brawler.model.visible = !brawler.inBush;
 
         brawler.mixer = new THREE.AnimationMixer(brawler.model!);
         brawler.mixer.clipAction(brawlers[brawler.brawlerType].modelsAnimations[animation]!).play();
@@ -576,6 +578,28 @@ export default class Game {
         return collidingObstacles;
     }
 
+    private checkBushCollision(object: THREE.Object3D, direction: THREE.Vector3): GameObstacle[] {
+        const boundingBox = new THREE.Box3().setFromObject(object);
+        const objectSize = boundingBox.getSize(new THREE.Vector3());
+
+        const newPosition = object.position.clone().add(direction);
+
+        const collidingObstacles: GameObstacle[] = [];
+
+        for (const obstacle of this.currentGame?.map.gameObstacles ?? []) {
+            if (obstacle.model === undefined) continue;
+
+            const obstacleBoundingBox = new THREE.Box3().setFromObject(obstacle.model);
+            const obstacleSize = obstacleBoundingBox.getSize(new THREE.Vector3());
+
+            if (this.checkColliding(newPosition, obstacle.model.position, objectSize, obstacleSize) && obstacle.obstacleType === GameObstacleType.BUSH) {
+                collidingObstacles.push(obstacle);
+            }
+        }
+
+        return collidingObstacles;
+    }
+
     private checkBrawlerCollision(object: THREE.Object3D, direction: THREE.Vector3): Brawler[] {
         const boundingBox = new THREE.Box3().setFromObject(object);
         const objectSize = boundingBox.getSize(new THREE.Vector3());
@@ -630,61 +654,6 @@ export default class Game {
 
         const character = this.currentGame?.brawlers.find((brawler) => brawler.id === this.playerID);
 
-        for (const brawler of this.currentGame?.brawlers ?? []) {
-            const model = brawler.model;
-            
-            if (model === undefined) continue;
-            
-            if (brawler.state !== BrawlerModelAnimation.WALK && brawler.velocity.length() > 0) {
-                this.setModel(brawler, BrawlerModelAnimation.WALK);
-                brawler.state = BrawlerModelAnimation.WALK;
-            } else if (brawler.state !== BrawlerModelAnimation.IDLE && brawler.velocity.length() === 0) {
-                this.setModel(brawler, BrawlerModelAnimation.IDLE);
-                brawler.state = BrawlerModelAnimation.IDLE;
-            }
-
-            model.position.set(brawler.position.x, 0, brawler.position.z);
-
-            // Rotate the character
-            if (brawler.velocity.length() > 0) {
-                // model.rotation.y = Math.atan2(brawler.velocity.x, brawler.velocity.z);
-                
-                // Quaternion rotation
-                const quaternion = new THREE.Quaternion();
-                quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), brawler.velocity.normalize());
-                model.quaternion.slerp(quaternion, 0.2);
-            }
-
-            brawler.mixer?.update(delta);
-
-            // Update projectiles
-            for (const projectile of brawler.projectiles) {
-                // seriously bro? rotation is the thing that breaks it? bullshit.
-                this.scene.remove(projectile.model!);
-
-                projectile.model = new THREE.Mesh(new THREE.IcosahedronGeometry(projectile.getBrawlerProjectileProperties().attackWidth / 1.5, 0), new THREE.MeshStandardMaterial({ color: 0x7FC8FF }))
-                projectile.model!.position.set(projectile.position.x, 0.5, projectile.position.z);
-                // projectile.model!.rotation.set(0, projectile.rotation.y, 0);
-                this.scene.add(projectile.model!);
-
-                const collidingCurrentBrawler = this.checkPlayerBrawlerCollision(projectile.model!, projectile.velocity);
-
-                if (brawler.id !== this.playerID && character?.hitProjectileIDs.indexOf(projectile.id) === -1 && collidingCurrentBrawler) {
-                    const damage = projectile.getBrawlerProjectileProperties().getProjectileDamage(projectile);
-                    character?.setBrawlerHealth(character.health - damage);
-                    character?.hitProjectileIDs.push(projectile.id);
-
-                    character!.lastHealInterruptTime = 0;
-    
-                    if (this.brawlerRef) {
-                        set(child(this.brawlerRef, "health"), character?.health);
-                    }
-                }
-            }
-
-            brawler.infoBarUI?.position.set(brawler.position.x, 3, brawler.position.z);
-        }
-
         if (character !== undefined) {
             const speed = brawlers[character.brawlerType].speed * delta * 60 / 50;
 
@@ -714,6 +683,8 @@ export default class Game {
             const inBounds = character.position.x + movementVector.x > this.currentGame!.map.firstCorner.x && character.position.x + movementVector.x < this.currentGame!.map.secondCorner.x && character.position.z + movementVector.z > this.currentGame!.map.firstCorner.z && character.position.z + movementVector.z < this.currentGame!.map.secondCorner.z;
 
             if (character.model) character.velocity = this.checkObstacleCollision(character.model, movementVector).length > 0 || !inBounds ? new THREE.Vector3() : movementVector;
+
+            character.inBush = this.checkBushCollision(character.model!, new THREE.Vector3()).length > 0;
 
             character.update(0.02);
 
@@ -772,6 +743,66 @@ export default class Game {
                 character.setBrawlerHealth(character.health + character.getbrawlerProperties().maxHealth / 7);
                 character.lastHealTime = 0;
             }
+        }
+
+        for (const brawler of this.currentGame?.brawlers ?? []) {
+            const model = brawler.model;
+            
+            if (model === undefined) continue;
+            
+            if (brawler.state !== BrawlerModelAnimation.WALK && brawler.velocity.length() > 0) {
+                this.setModel(brawler, BrawlerModelAnimation.WALK);
+                brawler.state = BrawlerModelAnimation.WALK;
+            } else if (brawler.state !== BrawlerModelAnimation.IDLE && brawler.velocity.length() === 0) {
+                this.setModel(brawler, BrawlerModelAnimation.IDLE);
+                brawler.state = BrawlerModelAnimation.IDLE;
+            }
+
+            model.position.set(brawler.position.x, 0, brawler.position.z);
+
+            if (brawler.id !== this.playerID) {
+                model.visible = !brawler.inBush;
+                if (brawler.infoBarUI) brawler.infoBarUI.element.style.visibility = brawler.inBush ? "hidden" : "visible";
+            }
+
+            // Rotate the character
+            if (brawler.velocity.length() > 0) {
+                // model.rotation.y = Math.atan2(brawler.velocity.x, brawler.velocity.z);
+                
+                // Quaternion rotation
+                const quaternion = new THREE.Quaternion();
+                quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), brawler.velocity.normalize());
+                model.quaternion.slerp(quaternion, 0.2);
+            }
+
+            brawler.mixer?.update(delta);
+
+            // Update projectiles
+            for (const projectile of brawler.projectiles) {
+                // seriously bro? rotation is the thing that breaks it? bullshit.
+                this.scene.remove(projectile.model!);
+
+                projectile.model = new THREE.Mesh(new THREE.IcosahedronGeometry(projectile.getBrawlerProjectileProperties().attackWidth / 1.5, 0), new THREE.MeshStandardMaterial({ color: 0x7FC8FF }))
+                projectile.model!.position.set(projectile.position.x, 0.5, projectile.position.z);
+                // projectile.model!.rotation.set(0, projectile.rotation.y, 0);
+                this.scene.add(projectile.model!);
+
+                const collidingCurrentBrawler = this.checkPlayerBrawlerCollision(projectile.model!, projectile.velocity);
+
+                if (brawler.id !== this.playerID && character?.hitProjectileIDs.indexOf(projectile.id) === -1 && collidingCurrentBrawler) {
+                    const damage = projectile.getBrawlerProjectileProperties().getProjectileDamage(projectile);
+                    character?.setBrawlerHealth(character.health - damage);
+                    character?.hitProjectileIDs.push(projectile.id);
+
+                    character!.lastHealInterruptTime = 0;
+    
+                    if (this.brawlerRef) {
+                        set(child(this.brawlerRef, "health"), character?.health);
+                    }
+                }
+            }
+
+            brawler.infoBarUI?.position.set(brawler.position.x, 3, brawler.position.z);
         }
         
         // this.controls.update();
