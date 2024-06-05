@@ -765,8 +765,8 @@ export default class Game {
                 return;
             }
 
-            character.lastHealInterruptTime++;
-            character.lastHealTime++;
+            character.lastHealInterruptTime += delta * 30;
+            character.lastHealTime += delta * 30;
 
             if (character.lastHealInterruptTime >= 60 && character.health < character.getbrawlerProperties().maxHealth && character.lastHealTime >= 30) {
                 character.setBrawlerHealth(character.health + character.getbrawlerProperties().maxHealth / 7);
