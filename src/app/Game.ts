@@ -685,6 +685,15 @@ export default class Game {
             if (character.model) character.velocity = this.checkObstacleCollision(character.model, movementVector).length > 0 || !inBounds ? new THREE.Vector3() : movementVector;
 
             character.inBush = this.checkBushCollision(character.model!, new THREE.Vector3()).length > 0;
+            
+            // check proximity bushes to show the bush
+            for (const obstacle of this.currentGame?.map.gameObstacles.filter((elem) => elem.obstacleType == GameObstacleType.BUSH) ?? []) {
+                if (obstacle.obstacleType === GameObstacleType.BUSH && obstacle.model !== undefined) {
+                    const distance = character.position.distanceTo(obstacle.model.position);
+
+                    obstacle.model.visible = distance > 2;
+                }
+            }
 
             character.update(0.02);
 
@@ -761,8 +770,11 @@ export default class Game {
             model.position.set(brawler.position.x, 0, brawler.position.z);
 
             if (brawler.id !== this.playerID) {
-                model.visible = !brawler.inBush;
-                if (brawler.infoBarUI) brawler.infoBarUI.element.style.visibility = brawler.inBush ? "hidden" : "visible";
+                const distance = character?.position.distanceTo(brawler.position);
+                const visible = !brawler.inBush || (distance ?? 0) <= 2;
+
+                model.visible = visible;
+                if (brawler.infoBarUI) brawler.infoBarUI.element.style.visibility = visible ? "visible" : "hidden";
             }
 
             // Rotate the character
