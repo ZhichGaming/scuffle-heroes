@@ -19,7 +19,8 @@ import getMiddlePoint from "../utils/getMiddlePoint";
 import GameOverMenu from "./GameOverMenu";
 
 export let game: Game;
-export let joystickManager: JoystickManager;
+export let movementJoystickManager: JoystickManager;
+export let aimJoystickManager: JoystickManager;
 
 export let playerRef: DatabaseReference | undefined = undefined;
 export let playersRef: DatabaseReference | undefined = undefined;
@@ -302,12 +303,19 @@ export default function App() {
         setGameMode(GameMode.KNOCKOUT);
         setGameMap(maps[1]);
         
-        var joystickOptions: JoystickManagerOptions = {
-            zone: document.getElementById('game-container') as HTMLElement,
+        const movementJoystickOptions: JoystickManagerOptions = {
+            zone: document.getElementById('movement-joystick') as HTMLElement,
             mode: 'semi',
+            color: '#7CB9E8',
+        };
+        const aimJoystickOptions: JoystickManagerOptions = {
+            zone: document.getElementById('aim-joystick') as HTMLElement,
+            mode: 'semi',
+            color: '#A52A2A',
         };
         import('nipplejs').then((nipplejs) => {
-            joystickManager = nipplejs.create(joystickOptions);
+            movementJoystickManager = nipplejs.create(movementJoystickOptions);
+            aimJoystickManager = nipplejs.create(aimJoystickOptions);
 
             game = new Game(handleGameEnd);
         });
@@ -324,6 +332,10 @@ export default function App() {
                 </div>
                 <div id="game-container" className="absolute undisplayed w-full h-full">
                     <canvas id="canvas" className="absolute"></canvas>
+                    <div className="absolute flex w-full h-full">
+                        <div id="movement-joystick" className="h-full flex-1"></div>
+                        <div id="aim-joystick" className="h-full flex-1"></div>
+                    </div>
                 </div>
                 <div id='infobars' className='hidden'>
                     {

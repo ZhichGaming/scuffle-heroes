@@ -19,7 +19,7 @@ import { gemS } from './models/obstacles/gemSpawner';
 import { piper } from './models/brawlers/Piper';
 import getValues from './utils/getValues';
 import { Controller } from './Controller';
-import { joystickManager } from './views/App';
+import { aimJoystickManager, movementJoystickManager } from './views/App';
 import { EventData, JoystickOutputData } from 'nipplejs';
 import { DatabaseReference, getDatabase, onValue, ref, set, child, remove } from "firebase/database";
 
@@ -191,16 +191,22 @@ export default class Game {
     public start() {
         this.animate();
 
-        joystickManager.on("move", this.onJoystickMove.bind(this));
-        joystickManager.on("end", this.onJoystickRelease.bind(this));
+        movementJoystickManager.on("move", this.onMovementJoystickMove.bind(this));
+        movementJoystickManager.on("end", this.onMovementJoystickRelease.bind(this));
+
+        aimJoystickManager.on("move", this.onAimJoystickMove.bind(this));
+        aimJoystickManager.on("end", this.onAimJoystickRelease.bind(this));
     }
 
     public stop() {
         this.renderer.dispose();
         this.stopped = true;
 
-        joystickManager.off("move", this.onJoystickMove.bind(this));
-        joystickManager.off("end", this.onJoystickRelease.bind(this));
+        movementJoystickManager.off("move", this.onMovementJoystickMove.bind(this));
+        movementJoystickManager.off("end", this.onMovementJoystickRelease.bind(this));
+
+        aimJoystickManager.off("move", this.onAimJoystickMove.bind(this));
+        aimJoystickManager.off("end", this.onAimJoystickRelease.bind(this));
     }
 
     public loadGame(game: GameInfo, playerID?: string) {
@@ -454,10 +460,10 @@ export default class Game {
         }
     }
 
-    private latestJoystickData?: JoystickOutputData;
+    private latestAimJoystickData?: JoystickOutputData;
 
-    private onJoystickMove(event: EventData, data: JoystickOutputData) {
-        this.latestJoystickData = data;
+    private onAimJoystickMove(event: EventData, data: JoystickOutputData) {
+        this.latestAimJoystickData = data;
         
         if (this.currentGame === undefined) return;
 
@@ -514,7 +520,7 @@ export default class Game {
         character.aimAttackMesh.rotation.z = -data.angle.radian + Math.PI / 2;
     }
 
-    private onJoystickRelease() {
+    private onAimJoystickRelease() {
         if (this.currentGame === undefined) return;
 
         const character = this.currentGame.brawlers.find((brawler) => brawler.id === this.playerID);
@@ -524,8 +530,8 @@ export default class Game {
         character.aiming = false;
         if (character.aimAttackMesh !== undefined) character.aimAttackMesh.visible = false;
 
-        if ((this.latestJoystickData?.force ?? 0 > 0.3) && character.ammo >= 1) {
-            const projectile = character.shootProjectile(this.latestJoystickData?.angle.radian ?? 0);
+        if ((this.latestAimJoystickData?.force ?? 0 > 0.3) && character.ammo >= 1) {
+            const projectile = character.shootProjectile(this.latestAimJoystickData?.angle.radian ?? 0);
             character.lastHealInterruptTime = 0;
             character.setBrawlerAmmo(character.ammo - 1);
 
@@ -535,6 +541,16 @@ export default class Game {
                 character.sendBrawlerData(this.brawlerRef);
             }
         }
+    }
+
+    private latestMovementJoystickData?: JoystickOutputData;
+
+    private onMovementJoystickMove(event: EventData, data: JoystickOutputData) {
+        this.latestMovementJoystickData = data;
+    }
+
+    private onMovementJoystickRelease() {
+        this.latestMovementJoystickData = undefined;
     }
 
     private checkObstacleCollision(object: THREE.Object3D, direction: THREE.Vector3): GameObstacle[] {
@@ -674,17 +690,22 @@ export default class Game {
 
             const movementVector = new THREE.Vector3();
 
-            if (this.controller.keys.up.pressed) {
-                movementVector.z -= 1;
-            }
-            if (this.controller.keys.down.pressed) {
-                movementVector.z += 1;
-            }
-            if (this.controller.keys.left.pressed) {
-                movementVector.x -= 1;
-            }
-            if (this.controller.keys.right.pressed) {
-                movementVector.x += 1;
+            if (this.latestMovementJoystickData) {
+                movementVector.z += Math.cos(this.latestMovementJoystickData.angle.radian + Math.PI / 2) * speed;
+                movementVector.x += Math.sin(this.latestMovementJoystickData.angle.radian + Math.PI / 2) * speed;
+            } else {
+                if (this.controller.keys.up.pressed) {
+                    movementVector.z -= 1;
+                }
+                if (this.controller.keys.down.pressed) {
+                    movementVector.z += 1;
+                }
+                if (this.controller.keys.left.pressed) {
+                    movementVector.x -= 1;
+                }
+                if (this.controller.keys.right.pressed) {
+                    movementVector.x += 1;
+                }
             }
             
             movementVector.normalize();
@@ -701,8 +722,8 @@ export default class Game {
             this.camera.lookAt(newCameraTarget);
             // this.controls.target = newCameraTarget
 
-            if (this.latestJoystickData !== undefined)
-                this.positionAimAttackMesh(character, this.latestJoystickData);
+            if (this.latestAimJoystickData !== undefined)
+                this.positionAimAttackMesh(character, this.latestAimJoystickData);
 
             for (const projectile of character.projectiles) {
                 projectile.update(delta);
