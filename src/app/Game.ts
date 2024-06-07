@@ -672,8 +672,36 @@ export default class Game {
             movementVector.multiplyScalar(speed);
 
             const inBounds = character.position.x + movementVector.x > this.currentGame!.map.firstCorner.x && character.position.x + movementVector.x < this.currentGame!.map.secondCorner.x && character.position.z + movementVector.z > this.currentGame!.map.firstCorner.z && character.position.z + movementVector.z < this.currentGame!.map.secondCorner.z;
+            const collidingObstacles = this.checkObstacleCollision(character.model!, movementVector);
 
-            if (character.model) character.velocity = this.checkObstacleCollision(character.model, movementVector).length > 0 || !inBounds ? new THREE.Vector3() : movementVector;
+            if (collidingObstacles.length === 0 && inBounds) {
+                character.velocity = movementVector;
+            } else {
+                // check both x and z separately
+                const xMovementVector = new THREE.Vector3(movementVector.x, 0, 0);
+                const zMovementVector = new THREE.Vector3(0, 0, movementVector.z);
+
+                const inBoundsX = character.position.x + xMovementVector.x > this.currentGame!.map.firstCorner.x && character.position.x + xMovementVector.x < this.currentGame!.map.secondCorner.x;
+                const inBoundsZ = character.position.z + zMovementVector.z > this.currentGame!.map.firstCorner.z && character.position.z + zMovementVector.z < this.currentGame!.map.secondCorner.z;
+
+                const collidingObstaclesX = this.checkObstacleCollision(character.model!, xMovementVector);
+                const collidingObstaclesZ = this.checkObstacleCollision(character.model!, zMovementVector);
+
+                const collidingX = collidingObstaclesX.length > 0 || !inBoundsX;
+                const collidingZ = collidingObstaclesZ.length > 0 || !inBoundsZ;
+
+                if (collidingX && collidingZ) {
+                    character.velocity = new THREE.Vector3();
+                } else if (collidingX) {
+                    character.velocity = new THREE.Vector3(0, 0, movementVector.z);
+                } else if (collidingZ) {
+                    character.velocity = new THREE.Vector3(movementVector.x, 0, 0);
+                } else {
+                    character.velocity = movementVector;
+                }
+            }
+
+            // if (character.model) character.velocity = this.checkObstacleCollision(character.model, movementVector).length > 0 || !inBounds ? new THREE.Vector3() : movementVector;
 
             character.inBush = this.checkBushCollision(character.model!, new THREE.Vector3()).length > 0;
             
