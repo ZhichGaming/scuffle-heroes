@@ -314,7 +314,13 @@ export default class Game {
         const obstaclesScene = new THREE.Scene();
 
         game.map.gameObstacles.forEach((obstacle) => {
-            const model = getValues(obstacles).find((o) => o.obstacleType === obstacle.obstacleType)?.models[0]?.clone();
+            const model = Object.values(obstacles).find((o) => o.obstacleType === obstacle.obstacleType)?.models[0]?.clone(true)
+
+            model?.traverse((child) => {
+                if (child instanceof THREE.Mesh) {
+                    child.material = child.material.clone();
+                }
+            });
 
             if (model === undefined) throw new Error("Obstacle model is undefined");
 
@@ -328,11 +334,11 @@ export default class Game {
             const zScaleFactor = obstacle.height! / size.z;
             model.scale.set(xScaleFactor, xScaleFactor, zScaleFactor);
 
-            obstaclesScene.add(model);
+            this.scene.add(model);
         });
 
         // obstaclesScene.position.set(0.5, 0, 1);
-        this.scene.add(obstaclesScene);
+        // this.scene.add(obstaclesScene);
 
         for (const brawler of game.brawlers) {
             for (const key in BrawlerModelAnimation) {
@@ -653,6 +659,7 @@ export default class Game {
         const delta = this.clock.getDelta()
 
         const character = this.currentGame?.brawlers.find((brawler) => brawler.id === this.playerID);
+        const characterVisibilityDistance = 3;
 
         if (character !== undefined) {
             const speed = brawlers[character.brawlerType].speed * delta * 60 / 50;
@@ -688,10 +695,16 @@ export default class Game {
             
             // check proximity bushes to show the bush
             for (const obstacle of this.currentGame?.map.gameObstacles.filter((elem) => elem.obstacleType == GameObstacleType.BUSH) ?? []) {
-                if (obstacle.obstacleType === GameObstacleType.BUSH && obstacle.model !== undefined) {
-                    const distance = character.position.distanceTo(obstacle.model.position);
+                if (obstacle.obstacleType === GameObstacleType.BUSH && obstacle.model !== undefined && character.model !== undefined) {
+                    const distance = character.model.position.distanceTo(obstacle.model.position);
 
-                    obstacle.model.visible = distance > 2;
+                    // obstacle.model.visible = distance > 2;
+                    obstacle.model.traverse((child) => {
+                        if (child instanceof THREE.Mesh) {
+                            child.material.transparent = true;
+                            child.material.opacity = distance > characterVisibilityDistance ? 1 : 0.2;
+                        }
+                    })
                 }
             }
 
@@ -771,7 +784,7 @@ export default class Game {
 
             if (brawler.id !== this.playerID) {
                 const distance = character?.position.distanceTo(brawler.position);
-                const visible = !brawler.inBush || (distance ?? 0) <= 2;
+                const visible = !brawler.inBush || (distance ?? 0) <= characterVisibilityDistance;
 
                 model.visible = visible;
                 if (brawler.infoBarUI) brawler.infoBarUI.element.style.visibility = visible ? "visible" : "hidden";
