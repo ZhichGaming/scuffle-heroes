@@ -95,8 +95,10 @@ export default class Brawler extends GameObject {
     state: BrawlerModelAnimation = BrawlerModelAnimation.IDLE;
     lastHealInterruptTime: number = 0;
     lastHealTime: number = 0;
+
     ammo: number = 3;
     inBush: boolean = false;
+    tempVisibleTime: number = 0;
     
     aiming: boolean = false;
     aimAttackMesh?: THREE.Mesh;

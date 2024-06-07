@@ -19,7 +19,7 @@ import { gemS } from './models/obstacles/gemSpawner';
 import { piper } from './models/brawlers/Piper';
 import getValues from './utils/getValues';
 import { Controller } from './Controller';
-import { aimJoystickManager, movementJoystickManager } from './views/App';
+import { aimJoystickManager, gameRef, movementJoystickManager } from './views/App';
 import { EventData, JoystickOutputData } from 'nipplejs';
 import { DatabaseReference, getDatabase, onValue, ref, set, child, remove, onDisconnect } from "firebase/database";
 
@@ -248,6 +248,7 @@ export default class Game {
 
                 brawlerInstance.ammo = brawler.ammo;
                 brawlerInstance.inBush = brawler.inBush;
+                brawlerInstance.tempVisibleTime = brawler.tempVisibleTime;
 
                 brawlerInstance.aiming = brawler.aiming;
                 brawlerInstance.aimingSuper = brawler.aimingSuper;
@@ -543,6 +544,7 @@ export default class Game {
         if ((this.latestAimJoystickData?.force ?? 0 > 0.3) && character.ammo >= 1) {
             const projectile = character.shootProjectile(this.latestAimJoystickData?.angle.radian ?? 0);
             character.lastHealInterruptTime = 0;
+            character.tempVisibleTime = 10;
             character.setBrawlerAmmo(character.ammo - 1);
 
             this.scene.add(projectile.model!);
@@ -762,6 +764,7 @@ export default class Game {
 
             character.lastHealInterruptTime += delta * 30;
             character.lastHealTime += delta * 30;
+            character.tempVisibleTime = Math.max(0, character.tempVisibleTime - delta * 30);
 
             if (character.lastHealInterruptTime >= 60 && character.health < character.getbrawlerProperties().maxHealth && character.lastHealTime >= 30) {
                 character.setBrawlerHealth(character.health + character.getbrawlerProperties().maxHealth / 7);
@@ -786,7 +789,7 @@ export default class Game {
 
             if (brawler.id !== this.playerID) {
                 const distance = character?.position.distanceTo(brawler.position);
-                const visible = !brawler.inBush || (distance ?? 0) <= characterVisibilityDistance;
+                const visible = !brawler.inBush || (distance ?? 0) <= characterVisibilityDistance || brawler.tempVisibleTime > 0;
 
                 model.visible = visible;
                 if (brawler.infoBarUI) brawler.infoBarUI.element.style.visibility = visible ? "visible" : "hidden";
@@ -822,6 +825,7 @@ export default class Game {
                     character?.hitProjectileIDs.push(projectile.id);
 
                     character!.lastHealInterruptTime = 0;
+                    character!.tempVisibleTime = 10;
     
                     if (this.brawlerRef) {
                         set(child(this.brawlerRef, "health"), character?.health);
@@ -845,6 +849,10 @@ export default class Game {
         
         if (this.currentGame?.brawlers.length === 1) {
             this.handleEnd(true);
+
+            if (gameRef)
+                remove(gameRef)
+
             return;
         }
 

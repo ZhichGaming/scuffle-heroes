@@ -246,10 +246,6 @@ export default function App() {
             remove(playerRef);
         }
 
-        if (gameRef) {
-            remove(gameRef);
-        }
-
         location.reload();
     }
 
