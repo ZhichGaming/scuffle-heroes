@@ -612,28 +612,6 @@ export default class Game {
         return collidingObstacles;
     }
 
-    private checkBrawlerCollision(object: THREE.Object3D, direction: THREE.Vector3): Brawler[] {
-        const boundingBox = new THREE.Box3().setFromObject(object);
-        const objectSize = boundingBox.getSize(new THREE.Vector3());
-
-        const newPosition = object.position.clone().add(direction);
-
-        const collidingBrawlers: Brawler[] = [];
-
-        for (const brawler of this.currentGame?.brawlers ?? []) {
-            if (brawler.model === undefined) continue;
-
-            const brawlerBoundingBox = new THREE.Box3().setFromObject(brawler.model);
-            const brawlerSize = brawlerBoundingBox.getSize(new THREE.Vector3());
-
-            if (this.checkColliding(newPosition, brawler.model.position, objectSize, brawlerSize)) {
-                collidingBrawlers.push(brawler);
-            }
-        }
-
-        return collidingBrawlers;
-    }
-
     private checkPlayerBrawlerCollision(object: THREE.Object3D, direction: THREE.Vector3): boolean {
         const boundingBox = new THREE.Box3().setFromObject(object);
         const objectSize = boundingBox.getSize(new THREE.Vector3());
@@ -733,13 +711,8 @@ export default class Game {
                 projectile.rotation.y += 0.5;
 
                 const collidingObstacles = this.checkObstacleCollision(projectile.model!, projectile.velocity);
-                const collidingBrawlers = this.checkBrawlerCollision(projectile.model!, projectile.velocity);
 
-                // I'm pretty sure the fact that the fps is too low is the reason why the brawlers aren't taking damage half of the time
-                // const collidingEnemyBrawlers = collidingBrawlers.filter((b) => b.team !== character.team);
-                const collidingEnemyBrawlers = []
-
-                if (projectile.getDistanceTraveled() > projectile.getBrawlerProjectileProperties().attackRange || collidingObstacles.length > 0 || collidingEnemyBrawlers.length > 0) {
+                if (projectile.getDistanceTraveled() > projectile.getBrawlerProjectileProperties().attackRange || collidingObstacles.length > 0) {
                     this.scene.remove(projectile.model!);
                     character.projectiles.splice(character.projectiles.indexOf(projectile), 1);
                 }
