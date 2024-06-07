@@ -17,7 +17,6 @@ import { getDatabase, onDisconnect, ref, set, update, push, onValue, DataSnapsho
 import Player, { PlayerState } from "../models/Player";
 import getMiddlePoint from "../utils/getMiddlePoint";
 import GameOverMenu from "./GameOverMenu";
-import * as THREE from 'three';
 
 export let game: Game;
 export let movementJoystickManager: JoystickManager;
@@ -58,12 +57,11 @@ export default function App() {
                 if (checkRequiredPlayers(snapshot)) {
                     const players = snapshot.val();
                     const playersArray = Object.values(players) as Player[];
-                    const opponents = playersArray.filter((player: Player) => player.playerState === PlayerState.MATCHMAKING && player.id !== playerBrawler.id);
-                    const opponentIDs = opponents.map((opponent) => opponent.id).filter((id) => id !== undefined) as string[];
+                    const opponent = playersArray.find((player: Player) => player.playerState === PlayerState.MATCHMAKING && player.id !== playerBrawler.id);
 
-                    if (opponentIDs.length >= 5) {
+                    if (opponent?.id) {
                         console.log('Match found');
-                        handleCreateGame(opponentIDs);
+                        handleCreateGame(opponent.id);
                         handleGameFound();
                     } else {
                         console.error('Failed to find opponent');
@@ -135,14 +133,14 @@ export default function App() {
         const playersArray = Object.values(players) as Player[];
 
         const matchmakingCount = playersArray.filter((player: Player) => player.playerState === PlayerState.MATCHMAKING);
-        if (matchmakingCount.length >= 6) {
+        if (matchmakingCount.length >= 2) {
             return true;
         }
 
         return false;
     }
 
-    const handleCreateGame = (otherIDs: string[]) => {
+    const handleCreateGame = (enemyID: string) => {
         if (gamesRef) {
             gameRef = push(gamesRef);
 
@@ -157,15 +155,12 @@ export default function App() {
                 respawnDuration: 5,
             };
 
-            const team0Position = [getMiddlePoint(gameInfo.map).x - 0.5, getMiddlePoint(gameInfo.map).y, 2]
-            const team1Position = [getMiddlePoint(gameInfo.map).x - 0.5, getMiddlePoint(gameInfo.map).y, gameInfo.map.secondCorner.z - 3]
+            playerBrawler.position.set(getMiddlePoint(gameInfo.map).x - 0.5, getMiddlePoint(gameInfo.map).y, 2);
 
-            playerBrawler.position.set(...(team0Position as [number, number, number]));
-
-            // const enemyBrawler = new Brawler(BrawlerType.PIPER);
-            // enemyBrawler.id = otherIDs;
-            // enemyBrawler.team = 1;
-            // enemyBrawler.position.set(getMiddlePoint(gameInfo.map).x, getMiddlePoint(gameInfo.map).y, gameInfo.map.secondCorner.z - 3);
+            const enemyBrawler = new Brawler(BrawlerType.PIPER);
+            enemyBrawler.id = enemyID;
+            enemyBrawler.team = 1;
+            enemyBrawler.position.set(getMiddlePoint(gameInfo.map).x, getMiddlePoint(gameInfo.map).y, gameInfo.map.secondCorner.z - 3);
 
             console.log('Game created', gameInfo);
 
@@ -173,18 +168,8 @@ export default function App() {
 
             const brawlersDict = {
                 [playerBrawler.id!]: playerBrawler,
+                [enemyID]: enemyBrawler,
             };
-
-            for (const id of otherIDs) {
-                const newBrawler = new Brawler(BrawlerType.PIPER);
-                newBrawler.id = id;
-                newBrawler.team = Object.keys(brawlersDict).length >= 3 ? 1 : 0;
-                newBrawler.position = newBrawler.team === 0 ? new THREE.Vector3(...team0Position) : new THREE.Vector3(...team1Position);
-
-                newBrawler.position.x += (Object.keys(brawlersDict).length + 1) % 3 - 2;
-
-                brawlersDict[id] = newBrawler;
-            }
 
             gameInfo.brawlers = Object.values(brawlersDict);
             setBrawlers(gameInfo.brawlers);
