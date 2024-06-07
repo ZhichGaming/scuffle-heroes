@@ -3,7 +3,6 @@ import * as THREE from "three";
 import { bush } from "../obstacles/bush";
 import { wBox } from "../obstacles/woodenBox";
 import { wBar } from "../obstacles/woodenBarrel";
-import { skul } from "../obstacles/skulls";
 import { uWal } from "../obstacles/unbreakableWall";
 import toObstacles from "@/app/utils/toObstacles";
 
@@ -12,8 +11,8 @@ const starrparkObstacles = [
     [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
     [null, null, null, null, null, null, null, null, null, null, null, null, null, null, bush, bush, null],
     [wBox, wBox, wBox, null, null, null, null, null, null, null, null, null, null, null, bush, bush, null],
-    [wBox, skul, null, null, null, null, null, null, null, null, null, null, wBar, wBox, wBox, wBox, null],
-    [null, null, null, null, null, skul, null, null, null, null, null, null, null, null, null, null, null],
+    [wBox, null, null, null, null, null, null, null, null, null, null, null, wBar, wBox, wBox, wBox, null],
+    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
     [null, null, null, null, wBox, wBox, bush, bush, null, null, null, null, null, null, null, null, null],
     [null, null, null, null, wBox, wBox, bush, bush, null, null, null, null, null, null, null, null, null],
     [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -33,8 +32,8 @@ const starrparkObstacles = [
     [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], 
     [null, null, null, null, null, null, null, null, null, bush, bush, wBox, wBox, null, null, null, null], 
     [null, null, null, null, null, null, null, null, null, bush, bush, wBox, wBox, null, null, null, null], 
-    [null, null, null, null, null, null, null, null, null, null, null, skul, null, null, null, null, null], 
-    [null, wBox, wBox, wBox, wBar, null, null, null, null, null, null, null, null, null, null, skul, wBox], 
+    [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], 
+    [null, wBox, wBox, wBox, wBar, null, null, null, null, null, null, null, null, null, null, null, wBox], 
     [null, bush, bush, null, null, null, null, null, null, null, null, null, null, null, wBox, wBox, wBox], 
     [null, bush, bush, null, null, null, null, null, null, null, null, null, null, null, null, null, null], 
     [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], 
