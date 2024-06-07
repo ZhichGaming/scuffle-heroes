@@ -21,7 +21,7 @@ import getValues from './utils/getValues';
 import { Controller } from './Controller';
 import { aimJoystickManager, movementJoystickManager } from './views/App';
 import { EventData, JoystickOutputData } from 'nipplejs';
-import { DatabaseReference, getDatabase, onValue, ref, set, child, remove } from "firebase/database";
+import { DatabaseReference, getDatabase, onValue, ref, set, child, remove, onDisconnect } from "firebase/database";
 
 export const brawlers: { [key in BrawlerType]: BrawlerProperties } = {
     [BrawlerType.PIPER]: piper
@@ -215,6 +215,8 @@ export default class Game {
 
         this.brawlersRef = ref(getDatabase(), 'games/' + this.currentGame?.id + '/brawlers');
         this.brawlerRef = ref(getDatabase(), 'games/' + this.currentGame?.id + '/brawlers/' + this.playerID);
+
+        onDisconnect(this.brawlerRef).remove();
 
         onValue(this.brawlersRef, (snapshot) => {
             const data = snapshot.val();
