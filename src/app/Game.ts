@@ -314,8 +314,6 @@ export default class Game {
         // this.camera.lookAt(sphere2.position);
         // this.controls.target = sphere2.position;
 
-        const obstaclesScene = new THREE.Scene();
-
         game.map.gameObstacles.forEach((obstacle) => {
             const model = Object.values(obstacles).find((o) => o.obstacleType === obstacle.obstacleType)?.models[0]?.clone(true)
 
@@ -362,6 +360,10 @@ export default class Game {
             const infoBarHTML = document.getElementById(`infobar-${brawler.id}`);
 
             if (infoBarHTML) {
+                if (brawler.id !== this.playerID) {
+                    infoBarHTML.getElementsByClassName("ammo")[0].remove();
+                }
+
                 const infoBar = new CSS2DObject(infoBarHTML);
                 this.scene.add(infoBar);
 
